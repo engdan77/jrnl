@@ -1,6 +1,6 @@
 [project]
 name = "jrnl"
-version = "2025.8.0"
+dynamic = ["version"]
 description = "Make notes of activities easily"
 readme = "README.md"
 authors = [
@@ -34,5 +34,9 @@ dependencies = [
 jrnl = "jrnl:main"
 
 [build-system]
-requires = ["uv_build>=0.8.12,<0.9.0"]
-build-backend = "uv_build"
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+# Point this to the file that defines __version__ (adjust path to your package)
+path = "src/jrnl/__version__.py"
