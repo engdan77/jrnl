@@ -1,0 +1,38 @@
+[project]
+name = "jrnl"
+version = "2025.8.0"
+description = "Make notes of activities easily"
+readme = "README.md"
+authors = [
+    { name = "Daniel Engval", email = "daniel@engvalls.eu" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "cffi==1.17.1",
+    "colorama==0.4.6",
+    "cryptography==45.0.6",
+    "jaraco-classes==3.4.0",
+    "jaraco-context==6.0.1",
+    "jaraco-functools==4.3.0",
+    "keyring==25.6.0",
+    "markdown-it-py==4.0.0",
+    "mdurl==0.1.2",
+    "more-itertools==10.7.0",
+    "parsedatetime==2.6",
+    "pycparser==2.22",
+    "pygments==2.19.2",
+    "python-dateutil==2.9.0.post0",
+    "pyxdg==0.28",
+    "rich==14.1.0",
+    "ruamel-yaml==0.18.15",
+    "ruamel-yaml-clib==0.2.12",
+    "six==1.17.0",
+    "tzlocal==5.3.1",
+]
+
+[project.scripts]
+jrnl = "jrnl:main"
+
+[build-system]
+requires = ["uv_build>=0.8.12,<0.9.0"]
+build-backend = "uv_build"
