@@ -23,14 +23,22 @@ class Entry:
         text: str = "",
         starred: bool = False,
     ):
-        self.journal = journal  # Reference to journal mainly to access its config
+        self.journal = journal  # Reference to a journal mainly to access its config
         self.date = date or datetime.datetime.now()
-        self.text = text
+        self._text = text
         self._title = None
         self._body = None
         self._tags = None
         self.starred = starred
         self.modified = False
+
+    @property
+    def text(self) -> str:
+        return self._text
+
+    @text.setter
+    def text(self, value):
+        self._text = value
 
     @property
     def fulltext(self) -> str:
@@ -55,6 +63,7 @@ class Entry:
     @title.setter
     def title(self, x: str):
         self._title = x
+        self.text = '\n'.join((x, self.body))
 
     @property
     def body(self) -> str:
