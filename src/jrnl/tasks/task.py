@@ -55,7 +55,7 @@ def get_entries_by_keyword(journal: Journal, keyword: str) -> list[Entry]:
 
 def remove_task_status(entry: Entry) -> Entry:
     for status in TaskStatus:
-        entry.title = re.sub(rf'@{status.value}:\d+-\d+-\d+', '', entry.title.strip())
+        entry.title = re.sub(rf'@{status.value}(:\d+-\d+-\d+)?', '', entry.title.strip())
         try:
             entry.tags.remove(f'@{status.value}')
         except ValueError:
@@ -83,6 +83,7 @@ def example_tasks():
     found_entries = get_entries_by_keyword(journal=j, keyword='@task:9.')
     logger.info(f"Found entries: {found_entries}")
     set_task_status(task_id=9, status=TaskStatus.completed, journal=j)
+    j.write()
     ...
 
 

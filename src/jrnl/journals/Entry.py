@@ -32,9 +32,15 @@ class Entry:
         self.starred = starred
         self.modified = False
 
+    @staticmethod
+    def reformat(text: str) -> str:
+        return ((text
+                 .replace('  ', ' ')
+                 .replace(' . ', ' ')))
+
     @property
     def text(self) -> str:
-        return self._text
+        return self.reformat(self._text)
 
     @text.setter
     def text(self, value):
