@@ -165,7 +165,10 @@ def append_mode(args: "Namespace", config: dict, journal: "Journal", **kwargs) -
     logging.debug(
         f"Append mode: appending raw text to journal '{args.journal_name}': {raw}"
     )
-    journal.new_entry(raw)
+
+    new_entry = journal.new_entry(raw, append=False)
+    journal.entries.append(new_entry)
+
     if args.journal_name != DEFAULT_JOURNAL_KEY:
         print_msg(
             Message(

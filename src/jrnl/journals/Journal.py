@@ -354,7 +354,7 @@ class Journal:
 
         return to_act
 
-    def new_entry(self, raw: str, date=None, sort: bool = True) -> Entry:
+    def new_entry(self, raw: str, date=None, sort: bool = True, append: bool = True) -> Entry:
         """Constructs a new entry from some raw text input.
         If a date is given, it will parse and use this, otherwise scan for a date in
         the input first.
@@ -387,7 +387,8 @@ class Journal:
             date = time.parse("now")
         entry = Entry(self, date, raw, starred=starred)
         entry.modified = True
-        self.entries.append(entry)
+        if append:
+            self.entries.append(entry)
         if sort:
             self.sort()
         return entry
