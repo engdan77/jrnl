@@ -91,13 +91,12 @@ def set_task_id(task_id: int | float, entry: Entry):
     return entry
 
 
-def set_task_status(task_id: int | float, status: TaskStatus, journal: Journal):
+def set_task_status(entry: Entry, status: TaskStatus):
     now = datetime.date.today()
-    for entry in journal.entries:
-        if f'{TASK_ID_PHRASE}{task_id}' in entry.text:
-            entry = remove_task_status(entry)
-            entry.title = f'{entry.title} @{status.value}:{now:%Y-%m-%d}'
-            entry.tags.append(f'@{status.value}')
+    entry = remove_task_status(entry)
+    entry.title = f'{entry.title} @{status.value}:{now:%Y-%m-%d}'
+    entry.tags.append(f'@{status.value}')
+    return entry
 
 
 def string_to_timedelta(s: str) -> datetime.timedelta:
@@ -145,11 +144,20 @@ def add_duration(entry: Entry, duration: datetime.timedelta):
 
 
 def apply_initial_task_properties(entry: Entry, journal: Journal) -> Entry:
-    if not has_task_id(entry):
+    task_id = get_task_id(entry)
+    if not task_id:
         next_task_id = get_next_taskid(journal)
         set_task_id(next_task_id, entry)
+    elif task_id % 1 == 0:
+        # Ensures if title contains e.g. @id:2.0 that it'd add a sub-task 2.1
+        next_sub_task_id = get_next_sub_taskid(journal, task_id)
+        if next_sub_task_id:
+            set_task_id(next_sub_task_id, entry)
+        else:
+            set_task_id(task_id + 0.1, entry)
+
     if not has_task_status(entry):
-        set_task_status()
+        entry = set_task_status(entry, status=TaskStatus.completed)
     return entry
 
 
@@ -163,7 +171,7 @@ def example_tasks():
     logger.info(f"Next sub task id: {next_sub_task_id}")
     found_entries = get_entries_by_keyword(journal=j, keyword='@task:9.')
     logger.info(f"Found entries: {found_entries}")
-    set_task_status(task_id=9, status=TaskStatus.completed, journal=j)
+    # set_task_status(task_id=9, status=TaskStatus.completed, journal=j)
     e = found_entries[0]
     ee = add_duration(e, datetime.timedelta(days=2, hours=3))
     j.write()
