@@ -4,8 +4,7 @@ from pathlib import Path
 
 from pygments.lexers import j
 
-from jrnl.journals import Entry
-from ..journals.Journal import Journal
+from jrnl.journals import Entry, Journal
 import logging
 from enum import StrEnum, auto
 
@@ -79,14 +78,14 @@ def remove_task_status(entry: Entry) -> Entry:
     for status in TaskStatus:
         entry.title = re.sub(rf'@{status.value}(:\d+-\d+-\d+)?', '', entry.title.strip())
         try:
-            entry.tags.remove(f'@{status.value}')
+            entry.tags.remove(f'{status.value}')
         except ValueError:
             pass
     return entry
 
 
 def set_task_id(task_id: int | float, entry: Entry):
-    entry.title = f'{entry.title} @{TASK_ID_PHRASE}{task_id}'
+    entry.title = f'{entry.title} {TASK_ID_PHRASE}{task_id}'
     entry.tags.append(f'@task')
     return entry
 
@@ -143,24 +142,6 @@ def add_duration(entry: Entry, duration: datetime.timedelta):
     return entry
 
 
-def apply_initial_task_properties(entry: Entry, journal: Journal) -> Entry:
-    task_id = get_task_id(entry)
-    if not task_id:
-        next_task_id = get_next_taskid(journal)
-        set_task_id(next_task_id, entry)
-    elif task_id % 1 == 0:
-        # Ensures if title contains e.g. @id:2.0 that it'd add a sub-task 2.1
-        next_sub_task_id = get_next_sub_taskid(journal, task_id)
-        if next_sub_task_id:
-            set_task_id(next_sub_task_id, entry)
-        else:
-            set_task_id(task_id + 0.1, entry)
-
-    if not has_task_status(entry):
-        entry = set_task_status(entry, status=TaskStatus.completed)
-    return entry
-
-
 def example_tasks():
     j = Journal()
     j.open(Path('~/.local/share/jrnl/journal.txt').expanduser().as_posix())
@@ -180,3 +161,21 @@ def example_tasks():
 
 if __name__ == "__main__":
     example_tasks()
+
+
+def apply_initial_task_properties(entry: Entry, journal: Journal) -> Entry:
+    task_id = get_task_id(entry)
+    if not task_id:
+        next_task_id = get_next_taskid(journal)
+        set_task_id(next_task_id, entry)
+    elif task_id % 1 == 0:
+        # Ensures if title contains e.g. @id:2.0 that it'd add a sub-task 2.1
+        next_sub_task_id = get_next_sub_taskid(journal, task_id)
+        if next_sub_task_id:
+            set_task_id(next_sub_task_id, entry)
+        else:
+            set_task_id(task_id + 0.1, entry)
+
+    if not has_task_status(entry):
+        entry = set_task_status(entry, status=TaskStatus.completed)
+    return entry

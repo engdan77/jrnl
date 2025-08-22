@@ -23,6 +23,7 @@ from jrnl.messages import MsgText
 from jrnl.output import print_msg
 from jrnl.output import print_msgs
 from jrnl.override import apply_overrides
+from jrnl.tasks.task import apply_initial_task_properties
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -167,6 +168,8 @@ def append_mode(args: "Namespace", config: dict, journal: "Journal", **kwargs) -
     )
 
     new_entry = journal.new_entry(raw, append=False)
+    # My custom code for make entries more "task" like
+    new_entry = apply_initial_task_properties(new_entry, journal=journal)
     journal.entries.append(new_entry)
 
     if args.journal_name != DEFAULT_JOURNAL_KEY:
