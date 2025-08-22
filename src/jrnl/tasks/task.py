@@ -84,7 +84,13 @@ def remove_task_status(entry: Entry) -> Entry:
     return entry
 
 
+def remove_task_id(entry: Entry) -> Entry:
+    entry.title = re.sub(rf'{TASK_ID_PHRASE}(\d+\.\d+)?', '', entry.title).strip()
+    return entry
+
+
 def set_task_id(task_id: int | float, entry: Entry):
+    entry = remove_task_id(entry)
     entry.title = f'{entry.title} {TASK_ID_PHRASE}{task_id}'
     entry.tags.append(f'@task')
     return entry
