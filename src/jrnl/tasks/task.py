@@ -4,6 +4,8 @@ from pathlib import Path
 
 from pygments.lexers import j
 
+from jrnl import install
+from jrnl.config import scope_config
 from jrnl.journals import Entry, Journal
 import logging
 from enum import StrEnum, auto
@@ -151,27 +153,6 @@ def add_duration(entry: Entry, duration: datetime.timedelta):
     return entry
 
 
-def example_tasks():
-    j = Journal()
-    j.open(Path('~/.local/share/jrnl/journal.txt').expanduser().as_posix())
-    next_task_id = get_next_taskid(j)
-    logger.info(f"Next task id: {next_task_id}")
-    ...
-    next_sub_task_id = get_next_sub_taskid(j, 9)
-    logger.info(f"Next sub task id: {next_sub_task_id}")
-    found_entries = get_entries_by_keyword(journal=j, keyword='@task:9.')
-    logger.info(f"Found entries: {found_entries}")
-    # set_task_status(task_id=9, status=TaskStatus.completed, journal=j)
-    e = found_entries[0]
-    ee = add_duration(e, datetime.timedelta(days=2, hours=3))
-    j.write()
-    ...
-
-
-if __name__ == "__main__":
-    example_tasks()
-
-
 def apply_initial_task_properties(entry: Entry, journal: Journal) -> Entry:
     task_id = get_task_id(entry)
     if not task_id:
@@ -188,3 +169,38 @@ def apply_initial_task_properties(entry: Entry, journal: Journal) -> Entry:
     if not has_task_status(entry):
         entry = set_task_status(entry, status=TaskStatus.completed)
     return entry
+
+
+def add_task_to_journal(raw: str, journal_name: str = 'default'):
+    config = install.load_or_install_jrnl('')
+    config = scope_config(config, journal_name)
+    journal_file = config['journal']
+    journal = Journal()
+    journal.open(journal_file)
+    new_entry = journal.new_entry(raw, append=False)
+    new_entry = apply_initial_task_properties(new_entry, journal=journal)
+    journal.entries.append(new_entry)
+    journal.write(journal_file)
+
+
+def example_tasks():
+    # j = Journal()
+    # j.open(Path('~/.local/share/jrnl/journal.txt').expanduser().as_posix())
+    # next_task_id = get_next_taskid(j)
+    # logger.info(f"Next task id: {next_task_id}")
+    # ...
+    # next_sub_task_id = get_next_sub_taskid(j, 9)
+    # logger.info(f"Next sub task id: {next_sub_task_id}")
+    # found_entries = get_entries_by_keyword(journal=j, keyword='@task:9.')
+    # logger.info(f"Found entries: {found_entries}")
+    # # set_task_status(task_id=9, status=TaskStatus.completed, journal=j)
+    # e = found_entries[0]
+    # ee = add_duration(e, datetime.timedelta(days=2, hours=3))
+    # j.write()
+    # ...
+    add_task_to_journal('My super duper task')
+    logger.info("Example tasks added")
+
+
+if __name__ == "__main__":
+    example_tasks()
