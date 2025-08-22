@@ -68,7 +68,7 @@ class Entry:
 
     @title.setter
     def title(self, x: str):
-        self._title = x
+        self._title = self.reformat(x)
         self.text = '\n'.join((x, self.body))
 
     @property
