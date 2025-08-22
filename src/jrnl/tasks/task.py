@@ -170,18 +170,22 @@ def apply_initial_task_properties(entry: "Entry", journal: "Journal") -> "Entry"
     return entry
 
 
-def add_task_to_journal(raw: str, journal_name: str = "default"):
-    """Main function to add a task to the journal."""
+def get_journal(journal_name: str = "default") -> tuple["Journal", str]:
     # Delay these imports to avoid circular-import during module import.
     from jrnl import install
     from jrnl.config import scope_config
     from jrnl.journals import Journal
-
     config = install.load_or_install_jrnl("")
     config = scope_config(config, journal_name)
     journal_file = config["journal"]
     journal = Journal()
     journal.open(journal_file)
+    return journal, journal_file
+
+
+def add_task_to_journal(raw: str, journal_name: str = "default"):
+    """Main function to add a task to the journal."""
+    journal, journal_file = get_journal()
     new_entry = journal.new_entry(raw, append=False)
     new_entry = apply_initial_task_properties(new_entry, journal=journal)
     journal.entries.append(new_entry)
