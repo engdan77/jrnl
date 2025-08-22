@@ -13,4 +13,4 @@ Fork from https://github.com/jrnl-org/jrnl
   - If e.g. `@task:2.0` added in title and already exists will automatically make this as incremented subtask `@task:2.1`
 - Tags used to idenfity TaskStatus following the pattern `@<status>:YYYY-mm-dd`
   - Status currently available: `todo`, `ongoing` and `completed`
-  - If no status supplied at creation of entry, `completed:<todays date>` will be added
+  - If no status supplied at creation of entry, `completed:<todays date>` will be added, and if supplied will overwrite existing status tag
