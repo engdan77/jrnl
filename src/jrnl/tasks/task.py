@@ -61,7 +61,10 @@ def get_next_sub_taskid(journal: Journal, task_id: int | float) -> float | None:
                     ids.add(float(token.split(":")[1].strip('.')))
     for id_ in sorted(ids, reverse=True):
         if int(id_) == int(task_id):
-            return id_ + 0.1
+            new_id = id_ + 0.1
+            if str(new_id).count('9') > 2:
+                new_id = round(new_id, 1)  # Workaround for weird floating point errors
+            return new_id
     else:
         return None
 
