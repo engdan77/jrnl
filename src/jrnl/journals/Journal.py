@@ -17,6 +17,7 @@ from jrnl.path import expand_path
 from jrnl.prompt import yesno
 
 from .Entry import Entry
+from ..tasks.task import apply_initial_task_properties
 
 
 class Tag:
@@ -354,7 +355,7 @@ class Journal:
 
         return to_act
 
-    def new_entry(self, raw: str, date=None, sort: bool = True, append: bool = True) -> Entry:
+    def new_entry(self, raw: str, date=None, sort: bool = True, append: bool = True, task: bool = True) -> Entry:
         """Constructs a new entry from some raw text input.
         If a date is given, it will parse and use this, otherwise scan for a date in
         the input first.
@@ -387,6 +388,10 @@ class Journal:
             date = time.parse("now")
         entry = Entry(self, date, raw, starred=starred)
         entry.modified = True
+
+        # My custom code for make entries more "task" like
+        if task:
+            entry = apply_initial_task_properties(entry)
         if append:
             self.entries.append(entry)
         if sort:
