@@ -4,7 +4,7 @@ import cyclopts
 from loguru import logger
 
 from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks, TaskStatus, \
-    set_status_to_task
+    set_status_to_task, get_journal_file_path
 
 cli_app = cyclopts.App()
 
@@ -44,6 +44,13 @@ def set_status(taskid: float, status: TaskStatus):
     """Set the status of a task."""
     set_status_to_task(taskid, status)
     logger.info(f"Status of task: {taskid} set to: {status.value}")
+
+
+@cli_app.command
+def journal_file():
+    """Print the path to the journal file."""
+    j = get_journal_file_path()
+    print(j)
 
 
 def main():

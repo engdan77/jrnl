@@ -215,6 +215,11 @@ def set_status_to_task(task_id: float, status: TaskStatus):
     journal.write(journal_file)
 
 
+def get_journal_file_path(journal_name: str = "default") -> str:
+    journal, journal_file = get_journal(journal_name)
+    return journal_file
+
+
 def search_journal(keywords: list[str]) -> dict | list[dict]:
     from jrnl.plugins import json_exporter
     journal, journal_file = get_journal()
