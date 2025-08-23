@@ -1,4 +1,5 @@
 import datetime
+import json
 import re
 import logging
 from enum import StrEnum, auto
@@ -192,9 +193,21 @@ def add_task_to_journal(raw: str, journal_name: str = "default"):
     journal.write(journal_file)
 
 
+def search_journal(keywords: list[str]) -> dict | list[dict]:
+    from jrnl.plugins import json_exporter
+    journal, journal_file = get_journal()
+    journal.filter(contains=keywords)
+    json_result = je = json_exporter.JSONExporter().export(journal)
+    return json.loads(json_result)
+
+
 def example_tasks():
-    add_task_to_journal("My super duper task")
-    logger.info("Example tasks added")
+    # add_task_to_journal("My super duper task")
+    # logger.info("Example tasks added")
+    journal, journal_file = get_journal()
+    entries = search_journal(["task:2"])
+    ...
+
 
 
 if __name__ == "__main__":
