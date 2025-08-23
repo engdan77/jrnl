@@ -197,7 +197,7 @@ def search_journal(keywords: list[str]) -> dict | list[dict]:
     from jrnl.plugins import json_exporter
     journal, journal_file = get_journal()
     journal.filter(contains=keywords)
-    json_result = je = json_exporter.JSONExporter().export(journal)
+    json_result = json_exporter.JSONExporter().export(journal)
     return json.loads(json_result)
 
 
