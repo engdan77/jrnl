@@ -111,9 +111,9 @@ def set_task_status(entry: "Entry", status: TaskStatus):
 
 def string_to_timedelta(s: str) -> datetime.timedelta:
     g = s.strip()
-    days = int(d.group(1)) if (d := re.match(r"(\d+)d", g)) else 0
-    hours = int(h.group(1)) if (h := re.match(r"(\d+)h", g)) else 0
-    mins = int(m.group(1)) if (m := re.match(r"(\d+)m", g)) else 0
+    days = int(d.group(1)) if (d := re.match(r".*?(\d+)d.*", g)) else 0
+    hours = int(h.group(1)) if (h := re.match(r".*?(\d+)h.*", g)) else 0
+    mins = int(m.group(1)) if (m := re.match(r".*?(\d+)m.*", g)) else 0
     return datetime.timedelta(days=int(days), hours=int(hours), minutes=int(mins))
 
 
@@ -193,10 +193,28 @@ def add_task_to_journal(raw: str, journal_name: str = "default"):
     journal.write(journal_file)
 
 
+def add_duration_to_task(task_id: float, duration: str):
+    """Add duration to a task."""
+    journal, journal_file = get_journal()
+    assert isinstance(task_id, float), 'Task ID must be a float to be specific'
+    entries = get_entries_by_keyword(journal, f"{TASK_ID_PHRASE}{task_id}")
+    for entry in entries:
+        entry = add_duration(entry, string_to_timedelta(duration))
+        journal.entries.append(entry)
+    journal.write(journal_file)
+
+
 def search_journal(keywords: list[str]) -> dict | list[dict]:
     from jrnl.plugins import json_exporter
     journal, journal_file = get_journal()
     journal.filter(contains=keywords)
+    json_result = json_exporter.JSONExporter().export(journal)
+    return json.loads(json_result)
+
+
+def get_all_tasks():
+    from jrnl.plugins import json_exporter
+    journal, journal_file = get_journal()
     json_result = json_exporter.JSONExporter().export(journal)
     return json.loads(json_result)
 
