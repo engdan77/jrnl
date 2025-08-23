@@ -26,7 +26,7 @@ def add_task(text: str):
 
 @cli_app.command
 def search(keywords: list[str]) -> dict:
-    """Search for entries in a journal with OR condition and return the results."""
+    """Search for entries in a journal using keywords as AND condition and return the results."""
     result = search_journal(keywords)
     print(json.dumps(result, indent=4))
     return result

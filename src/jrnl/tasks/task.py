@@ -223,7 +223,7 @@ def get_journal_file_path(journal_name: str = "default") -> str:
 def search_journal(keywords: list[str]) -> dict | list[dict]:
     from jrnl.plugins import json_exporter
     journal, journal_file = get_journal()
-    journal.filter(contains=keywords)
+    journal.filter(contains=keywords, strict=True)
     json_result = json_exporter.JSONExporter().export(journal)
     return json.loads(json_result)
 
