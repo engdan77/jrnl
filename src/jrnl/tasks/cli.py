@@ -6,7 +6,7 @@ from loguru import logger
 from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks, TaskStatus, \
     set_status_to_task, get_journal_file_path
 
-cli_app = cyclopts.App()
+cli_app = cyclopts.App(help="[yellow]Manage tasks in your journal.[/yellow]", help_format='rich')
 
 
 @cli_app.command
