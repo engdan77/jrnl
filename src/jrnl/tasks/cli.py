@@ -3,7 +3,8 @@ import json
 import cyclopts
 from loguru import logger
 
-from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks
+from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks, TaskStatus, \
+    set_status_to_task
 
 cli_app = cyclopts.App()
 
@@ -37,6 +38,12 @@ def add_duration(taskid: float, duration: str):
     add_duration_to_task(taskid, duration)
     logger.info(f"Duration added to task: {taskid} with duration: {duration}")
 
+
+@cli_app.command
+def set_status(taskid: float, status: TaskStatus):
+    """Set the status of a task."""
+    set_status_to_task(taskid, status)
+    logger.info(f"Status of task: {taskid} set to: {status.value}")
 
 
 def main():

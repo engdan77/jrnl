@@ -204,6 +204,17 @@ def add_duration_to_task(task_id: float, duration: str):
     journal.write(journal_file)
 
 
+def set_status_to_task(task_id: float, status: TaskStatus):
+    """Set status of a task."""
+    journal, journal_file = get_journal()
+    assert isinstance(task_id, float), 'Task ID must be a float to be specific'
+    entries = get_entries_by_keyword(journal, f"{TASK_ID_PHRASE}{task_id}")
+    for entry in entries:
+        entry = set_task_status(entry, status)
+        journal.entries.append(entry)
+    journal.write(journal_file)
+
+
 def search_journal(keywords: list[str]) -> dict | list[dict]:
     from jrnl.plugins import json_exporter
     journal, journal_file = get_journal()
