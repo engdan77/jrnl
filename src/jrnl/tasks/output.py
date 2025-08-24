@@ -43,11 +43,13 @@ def search_result_to_alfred(result: dict) -> str:
         entry['title'] = (
             f"{entry['title']} ({task_id})" if task_id else entry['title']
         )
+        show_tags = entry.get('tags', [])
+        show_tags.remove('@task')
         item = AlfredItem(
-            title=entry['title'],
-            subtitle=entry['body'],
+            title=f'{entry["date"]} {' '.join(show_tags)}',
+            subtitle=entry['title'],
             arg=task_id,
             autocomplete=entry['title'],
         )
         items.append(item)
-    return json.dumps({'items': [item.to_dict() for item in items]})
+    return json.dumps({'items': [item.to_dict() for item in sorted(items, key=lambda x: x.title)]})
