@@ -52,4 +52,9 @@ def search_result_to_alfred(result: dict) -> str:
             autocomplete=entry['title'],
         )
         items.append(item)
-    return json.dumps({'items': [item.to_dict() for item in sorted(items, key=lambda x: x.title)]})
+    return json.dumps({
+        'cache': {
+            'seconds': 30
+        },
+        'items': [item.to_dict() for item in sorted(items, key=lambda x: x.title)]
+    })
