@@ -2,11 +2,18 @@ import json
 
 import cyclopts
 from loguru import logger
+from enum import StrEnum, auto
 
+from jrnl.tasks.output import search_result_to_alfred
 from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks, TaskStatus, \
     set_status_to_task, get_journal_file_path
 
 cli_app = cyclopts.App(help="[yellow]Manage tasks in your journal.[/yellow]", help_format='rich')
+
+
+class OutputFormat(StrEnum):
+    json = auto()
+    alfred = auto()
 
 
 @cli_app.command
@@ -25,10 +32,14 @@ def add_task(text: str):
 
 
 @cli_app.command
-def search(keywords: list[str]) -> dict:
+def search(keywords: list[str], output_format: OutputFormat = OutputFormat.json) -> dict:
     """Search for entries in a journal using keywords as AND condition and return the results."""
     result = search_journal(keywords)
-    print(json.dumps(result, indent=4))
+    match output_format:
+        case OutputFormat.json:
+            print(json.dumps(result, indent=4))
+        case OutputFormat.alfred:
+            print(search_result_to_alfred(result))
     return result
 
 

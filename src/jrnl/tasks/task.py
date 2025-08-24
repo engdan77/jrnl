@@ -3,7 +3,7 @@ import json
 import re
 import logging
 from enum import StrEnum, auto
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from jrnl.journals import Entry, Journal  # for type checking only
@@ -35,8 +35,9 @@ def has_task_id(entry: "Entry") -> bool:
         return False
 
 
-def get_task_id(entry: "Entry") -> int | float | None:
-    for token in entry.text.split():
+def get_task_id(entry: Union["Entry", str]) -> int | float | None:
+    title = entry.text if not isinstance(entry, str) else entry
+    for token in title.split():
         if token.startswith(TASK_ID_PHRASE):
             return float(token.split(":")[1].strip("."))
     else:

@@ -1,0 +1,53 @@
+import dataclasses
+import json
+
+from jrnl.tasks.task import get_task_id
+
+
+# Example Alfred JSON output
+# {"items": [
+#     {
+#         "uid": "desktop",
+#         "type": "file",
+#         "title": "Desktop",
+#         "subtitle": "~/Desktop",
+#         "arg": "~/Desktop",
+#         "autocomplete": "Desktop",
+#         "icon": {
+#             "type": "fileicon",
+#             "path": "~/Desktop"
+#         }
+#     }
+# ]}
+
+
+@dataclasses.dataclass
+class AlfredItem:
+    title: str
+    subtitle: str
+    arg: float | int
+    autocomplete: str
+
+    def to_json(self):
+        return json.dumps(dataclasses.asdict(self))
+
+    def to_dict(self):
+        return dataclasses.asdict(self)
+
+
+def search_result_to_alfred(result: dict) -> str:
+    """This is the format that macOS Alfred JSON expects as output based on search results."""
+    items = []
+    for entry in result['entries']:
+        task_id = get_task_id(entry['title'])
+        entry['title'] = (
+            f"{entry['title']} ({task_id})" if task_id else entry['title']
+        )
+        item = AlfredItem(
+            title=entry['title'],
+            subtitle=entry['body'],
+            arg=task_id,
+            autocomplete=entry['title'],
+        )
+        items.append(item)
+    return json.dumps({'items': [item.to_dict() for item in items]})
