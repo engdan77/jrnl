@@ -3,7 +3,7 @@ import json
 import re
 import logging
 from enum import StrEnum, auto
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, Final
 
 if TYPE_CHECKING:
     from jrnl.journals import Entry, Journal  # for type checking only
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
-TASK_ID_PHRASE = "@task:"
+TASK_ID_PHRASE: Final = "@task:"
 
 
 class TaskStatus(StrEnum):
@@ -35,8 +35,11 @@ def has_task_id(entry: "Entry") -> bool:
         return False
 
 
-def get_task_id(entry: Union["Entry", str]) -> int | float | None:
-    title = entry.text if not isinstance(entry, str) else entry
+def get_task_id(entry: Union["Entry", str, dict]) -> int | float | None:
+    try:
+        title = entry.text if not isinstance(entry, str) else entry
+    except AttributeError:
+        title = entry['title']
     for token in title.split():
         if token.startswith(TASK_ID_PHRASE):
             return float(token.split(":")[1].strip("."))
@@ -90,6 +93,15 @@ def remove_task_status(entry: "Entry") -> "Entry":
     return entry
 
 
+def get_task_status(entry: "Entry") -> TaskStatus | None:
+    title = entry['title'] if isinstance(entry, dict) else entry.title
+    for status in TaskStatus:
+        if f"@{status.value}" in title:
+            return status
+    else:
+        return None
+
+
 def remove_task_id(entry: "Entry") -> "Entry":
     entry.title = re.sub(rf"{TASK_ID_PHRASE}(\d+\.\d+)?", "", entry.title).strip()
     return entry
@@ -132,8 +144,9 @@ def timedelta_to_string(td: datetime.timedelta) -> str:
     return output_string.strip()
 
 
-def get_duration(entry: "Entry") -> datetime.timedelta:
-    if duration := re.match(r".*?@duration:(\w+).*", entry.title):
+def get_duration(entry: Union["Entry", dict]) -> datetime.timedelta:
+    title = entry['title'] if isinstance(entry, dict) else entry.title
+    if duration := re.match(r".*?@duration:(\w+).*", title):
         g = duration.group(1)
         return string_to_timedelta(g)
     else:
@@ -234,6 +247,22 @@ def get_all_tasks():
     journal, journal_file = get_journal()
     json_result = json_exporter.JSONExporter().export(journal)
     return json.loads(json_result)
+
+
+def get_task_by_id(task_id: float):
+    journal, journal_file = get_journal()
+    entries = get_entries_by_keyword(journal, f"{TASK_ID_PHRASE}{task_id}")
+    return entries[0]
+
+
+def get_tasks_by_id(task_id: float):
+    """Return all (associated) tasks with the given major task ID."""
+    output_tasks = []
+    all_tasks = get_all_tasks()
+    for task in all_tasks['entries']:
+        if int(get_task_id(task)) == int(task_id):
+            output_tasks.append(task)
+    return output_tasks
 
 
 def example_tasks():
