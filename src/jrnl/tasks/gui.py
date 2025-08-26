@@ -1,16 +1,14 @@
-import dataclasses
 import datetime
 import re
-from typing import Protocol
 
-import nicegui
 from shared_memory_dict import SharedMemoryDict
 from loguru import logger
 
-from nicegui import ui
+from nicegui import ui, app
 
-from jrnl.tasks.task import get_task_by_id, get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, TaskStatus, \
-    get_task_status, get_duration, string_to_timedelta, timedelta_to_string
+from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, get_task_status, \
+    get_duration, timedelta_to_string, update_task_by_gui_columns
+from jrnl.tasks.protocols import Columns, TaskStatus
 
 rows = []
 
@@ -18,53 +16,23 @@ rows = []
 def set_shared(value):
     shared_mem = SharedMemoryDict(name='shared', size=16)
     shared_mem['value'] = value
-    logger.info(f'Shared memory set to {value}')
 
 
 def get_shared():
     shared_mem = SharedMemoryDict(name='shared', size=16)
-    logger.info(f'Shared memory get to {shared_mem["value"]}')
     return shared_mem['value']
 
 
 set_shared('1.0')  # Shared memory so that "lambda" functions can access the value.
 
 
-class NiceGuiElement(Protocol):
-
-    @property
-    def value(self): ...
-
-    @property
-    def text(self): ...
-
-
-@dataclasses.dataclass
-class Columns:
-    id: NiceGuiElement
-    date: NiceGuiElement
-    title: NiceGuiElement
-    starred: NiceGuiElement
-    status: NiceGuiElement
-    duration: NiceGuiElement
-
-    def to_dict(self):
-        return {
-            'id': self.id.text,
-            'date': self.date.text,
-            'title': self.title.value,
-            'status': self.status.value,
-            'starred': self.starred.value,
-            'duration': self.duration.value,
-        }
-
-
 def save_rows():
     headers, *items = rows
     for item in items:
-        columns = list(item.descendants())
-        item_dict = Columns(*columns).to_dict()
-        ...
+        columns = Columns(*list(item.descendants()))
+        update_task_by_gui_columns(columns)
+        logger.info(f'Saving task: {columns}')
+    app.shutdown()
 
 
 def validate_duration(duration: str):

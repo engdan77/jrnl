@@ -5,8 +5,8 @@ from loguru import logger
 from enum import StrEnum, auto
 
 from jrnl.tasks.output import search_result_to_alfred
-from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks, TaskStatus, \
-    set_status_to_task, get_journal_file_path
+from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks, set_status_to_task, get_journal_file_path
+from jrnl.tasks.protocols import TaskStatus
 
 cli_app = cyclopts.App(help="[yellow]Manage tasks in your journal.[/yellow]", help_format='rich')
 

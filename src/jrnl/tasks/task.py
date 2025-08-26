@@ -2,22 +2,17 @@ import datetime
 import json
 import re
 import logging
-from enum import StrEnum, auto
 from typing import TYPE_CHECKING, Union, Final
 
+from jrnl.tasks.protocols import Columns, TaskStatus
+
 if TYPE_CHECKING:
-    from jrnl.journals import Entry, Journal  # for type checking only
+    pass
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 TASK_ID_PHRASE: Final = "@task:"
-
-
-class TaskStatus(StrEnum):
-    todo = auto()
-    ongoing = auto()
-    completed = auto()
 
 
 def has_task_status(entry: "Entry") -> bool:
@@ -114,12 +109,41 @@ def set_task_id(task_id: int | float, entry: "Entry"):
     return entry
 
 
-def set_task_status(entry: "Entry", status: TaskStatus):
+def set_task_status(entry: "Entry", status: TaskStatus) -> "Entry":
     now = datetime.date.today()
     entry = remove_task_status(entry)
     entry.title = f"{entry.title} @{status.value}:{now:%Y-%m-%d}"
     entry.tags.append(f"@{status.value}")
     return entry
+
+
+def update_task_by_gui_columns(columns: Columns):
+    """Update a task by the GUI columns."""
+    t = columns.to_dict()
+    new_title = t['title']
+    task_id = float(t['id'])
+    new_status = TaskStatus(t['status'].lower())
+    duration = string_to_timedelta(t['duration'])
+
+    journal, journal_file = get_journal()
+    assert isinstance(task_id, float), 'Task ID must be a float to be specific'
+    entries = get_entries_by_keyword(journal, f"{TASK_ID_PHRASE}{task_id}")
+    if not entries:
+        new_entry = journal.new_entry(new_title, append=False)
+        new_entry = apply_initial_task_properties(new_entry, journal=journal, override_task_id=task_id)
+        set_task_status(new_entry, new_status)
+        journal.entries.append(new_entry)
+        logger.info(f"Added new task: {new_entry.title}")
+    for entry in entries:
+        if entry.title != new_title:
+            entry.title = t['title']
+        current_status = get_task_status(entry)
+        if new_status != current_status:
+            entry = set_task_status(entry, new_status)  # To avoid wrecking the current date
+        if duration:
+            entry = replace_duration(entry, duration)
+        logger.info(f"Updated task: {entry.title}")
+    journal.write(journal_file)
 
 
 def string_to_timedelta(s: str) -> datetime.timedelta:
@@ -158,7 +182,7 @@ def remove_duration(entry: "Entry") -> "Entry":
     return entry
 
 
-def add_duration(entry: "Entry", duration: datetime.timedelta):
+def add_duration(entry: "Entry", duration: datetime.timedelta) -> "Entry":
     current_duration = get_duration(entry)
     new_duration = current_duration + duration
     duration_string = timedelta_to_string(new_duration)
@@ -167,18 +191,28 @@ def add_duration(entry: "Entry", duration: datetime.timedelta):
     return entry
 
 
-def apply_initial_task_properties(entry: "Entry", journal: "Journal") -> "Entry":
-    task_id = get_task_id(entry)
-    if not task_id:
-        next_task_id = get_next_taskid(journal)
-        set_task_id(next_task_id, entry)
-    elif task_id % 1 == 0:
-        # Ensures if title contains e.g. @id:2.0 that it'd add a sub-task 2.1
-        next_sub_task_id = get_next_sub_taskid(journal, task_id)
-        if next_sub_task_id:
-            set_task_id(next_sub_task_id, entry)
-        else:
-            set_task_id(task_id + 0.1, entry)
+def replace_duration(entry: "Entry", duration: datetime.timedelta) -> "Entry":
+    duration_string = timedelta_to_string(duration)
+    remove_duration(entry)
+    entry.title = f"{entry.title} @duration:{duration_string}"
+    return entry
+
+
+def apply_initial_task_properties(entry: "Entry", journal: "Journal", override_task_id: float | None = None) -> "Entry":
+    if override_task_id:
+        set_task_id(override_task_id, entry)
+    else:
+        task_id = get_task_id(entry)
+        if not task_id:
+            next_task_id = get_next_taskid(journal)
+            set_task_id(next_task_id, entry)
+        elif task_id % 1 == 0:
+            # Ensures if title contains e.g. @id:2.0 that it'd add a sub-task 2.1
+            next_sub_task_id = get_next_sub_taskid(journal, task_id)
+            if next_sub_task_id:
+                set_task_id(next_sub_task_id, entry)
+            else:
+                set_task_id(task_id + 0.1, entry)
 
     if not has_task_status(entry):
         entry = set_task_status(entry, status=TaskStatus.completed)
@@ -249,7 +283,7 @@ def get_all_tasks():
     return json.loads(json_result)
 
 
-def get_task_by_id(task_id: float):
+def get_task_by_id(task_id: float) -> "Entry":
     journal, journal_file = get_journal()
     entries = get_entries_by_keyword(journal, f"{TASK_ID_PHRASE}{task_id}")
     return entries[0]
