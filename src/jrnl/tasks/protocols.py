@@ -43,7 +43,4 @@ class Columns:
 
 class TaskStatus(StrEnum):
     todo = auto()
-    ongoing = auto()
     completed = auto()
-
-
