@@ -14,8 +14,8 @@ def set_shared(value):
 
 
 def get_shared():
-    shared_mem = SharedMemoryDict(name='shared', size=16)
-    return shared_mem['value']
+    global share_mem_pointer
+    return share_mem_pointer['value']
 
 
 def close_shared():

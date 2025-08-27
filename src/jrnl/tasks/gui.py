@@ -5,6 +5,7 @@ from loguru import logger
 
 from nicegui import ui, app, Tailwind
 
+from jrnl import __version__
 from jrnl.tasks.sharedmem import set_shared, get_shared
 from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, get_task_status, \
     get_duration, timedelta_to_string, update_task_by_gui_columns, get_all_tasks, get_next_taskid, get_all_tasks_as_dict
@@ -19,6 +20,9 @@ def save_rows():
     headers, *items = rows
     for item in items:
         columns = Columns(*list(item.descendants()))
+        if not columns.to_dict().get('title', None):
+            logger.info('Skipping empty row')
+            continue
         update_task_by_gui_columns(columns)
         logger.info(f'Saving task: {columns}')
     app.shutdown()
@@ -36,7 +40,8 @@ def gui_update_task(taskid: float | str | None = None):
     else:
         tasks = get_tasks_by_id(float(taskid))
 
-    ui.label("Tasks:")
+    ui.markdown("#### Tasks ✅")
+    ui.label(__version__)
     ui.dark_mode().enable()
     container = ui.column()
 
@@ -50,15 +55,14 @@ def gui_update_task(taskid: float | str | None = None):
     classes_styling = 'w-full'
 
     red_style = Tailwind().text_color('red-600').font_weight('bold')
+    header_style = Tailwind().text_color('yellow-600').font_weight('bold')
+
+    header_titles = ('ID', 'Date', 'Title', 'Status', 'Starred', 'Duration')
 
     with container:
         with ui.grid(columns=column_styling).classes(classes_styling) as row:
-            ui.label('ID')
-            ui.label('Date')
-            ui.label('Title')
-            ui.label('Status')
-            ui.label('Starred')
-            ui.label('Duration')
+            for h in header_titles:
+                header_style.apply(ui.label(h))
             rows.append(row)
         for task in tasks:
             id_ = str(get_task_id(task))
@@ -74,7 +78,7 @@ def gui_update_task(taskid: float | str | None = None):
                 ui.input(value=current_duration_string, validation={'Shall be in 1d2h3m format': validate_duration})
                 rows.append(row)
 
-    def add_subtask():
+    def add_task():
         next_subtask_id = get_shared()
         with container:
             with ui.grid(columns=column_styling).classes(classes_styling) as subtask_row:
@@ -89,10 +93,13 @@ def gui_update_task(taskid: float | str | None = None):
                 set_shared(next_subtask_id)
                 rows.append(subtask_row)
 
-    ui.button('Add subtask', on_click=add_subtask)
+    if taskid:
+        add_label = 'Add subtask'
+    else:
+        add_label = 'Add task'
 
+    ui.button(add_label, on_click=add_task)
     ui.button('Save', on_click=save_rows)
-
     ui.run(native=True, reload=False, window_size=(1280, 720))
 
 
