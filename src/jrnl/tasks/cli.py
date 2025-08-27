@@ -1,5 +1,4 @@
 import json
-from typing import Annotated
 
 import cyclopts
 from loguru import logger
