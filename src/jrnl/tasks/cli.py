@@ -8,7 +8,7 @@ import jrnl.tasks.gui
 import jrnl.tasks.sharedmem
 from jrnl.tasks.gui import gui_update_task
 from jrnl.tasks.output import search_result_to_alfred
-from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks, set_status_to_task, get_journal_file_path
+from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks_as_dict, set_status_to_task, get_journal_file_path
 from jrnl.tasks.protocols import TaskStatus
 
 cli_app = cyclopts.App(help="[yellow]Manage tasks in your journal.[/yellow]", help_format='rich')
@@ -22,7 +22,7 @@ class OutputFormat(StrEnum):
 @cli_app.command
 def list_tasks() -> list[dict]:
     """List all tasks in the journal."""
-    tasks = get_all_tasks()
+    tasks = get_all_tasks_as_dict()
     print(json.dumps(tasks, indent=4))
     return tasks
 
@@ -61,7 +61,7 @@ def set_status(taskid: float, status: TaskStatus):
 
 
 @cli_app.command
-def update_task(taskid: float):
+def update_task(taskid: float | None = None):
     """Update a task."""
     gui_update_task(taskid=taskid)
     logger.info(f"Task: {taskid} updated")

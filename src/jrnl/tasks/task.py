@@ -284,11 +284,16 @@ def search_journal(keywords: list[str]) -> dict | list[dict]:
     return json.loads(json_result)
 
 
-def get_all_tasks():
+def get_all_tasks_as_dict():
     from jrnl.plugins import json_exporter
     journal, journal_file = get_journal()
     json_result = json_exporter.JSONExporter().export(journal)
     return json.loads(json_result)
+
+
+def get_all_tasks() -> list:
+    all_tasks = get_all_tasks_as_dict()
+    return sorted(all_tasks['entries'], key=lambda x: (x['date'], x['time']))
 
 
 def get_task_by_id(task_id: float) -> "Entry":
@@ -300,7 +305,7 @@ def get_task_by_id(task_id: float) -> "Entry":
 def get_tasks_by_id(task_id: float):
     """Return all (associated) tasks with the given major task ID."""
     output_tasks = []
-    all_tasks = get_all_tasks()
+    all_tasks = get_all_tasks_as_dict()
     for task in all_tasks['entries']:
         if int(get_task_id(task)) == int(task_id):
             output_tasks.append(task)

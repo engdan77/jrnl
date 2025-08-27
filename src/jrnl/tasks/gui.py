@@ -7,7 +7,7 @@ from nicegui import ui, app, Tailwind
 
 from jrnl.tasks.sharedmem import set_shared, get_shared
 from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, get_task_status, \
-    get_duration, timedelta_to_string, update_task_by_gui_columns
+    get_duration, timedelta_to_string, update_task_by_gui_columns, get_all_tasks, get_next_taskid, get_all_tasks_as_dict
 from jrnl.tasks.protocols import Columns, TaskStatus
 
 rows = []
@@ -30,15 +30,21 @@ def validate_duration(duration: str):
     return bool(valid)
 
 
-def gui_update_task(taskid: float | str):
-    tasks = get_tasks_by_id(float(taskid))
+def gui_update_task(taskid: float | str | None = None):
+    if taskid is None:
+        tasks = get_all_tasks()
+    else:
+        tasks = get_tasks_by_id(float(taskid))
 
     ui.label("Tasks:")
     ui.dark_mode().enable()
     container = ui.column()
 
     journal, journal_file = get_journal()
-    set_shared(get_next_sub_taskid(journal, taskid))
+    if taskid is not None:
+        set_shared(get_next_sub_taskid(journal, taskid))
+    else:
+        set_shared(get_next_taskid(journal))
 
     column_styling = '30px 80px 700px 100px 60px 90px'
     classes_styling = 'w-full'
