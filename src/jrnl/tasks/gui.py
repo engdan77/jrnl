@@ -4,7 +4,7 @@ import re
 from shared_memory_dict import SharedMemoryDict
 from loguru import logger
 
-from nicegui import ui, app
+from nicegui import ui, app, Tailwind
 
 from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, get_task_status, \
     get_duration, timedelta_to_string, update_task_by_gui_columns
@@ -54,6 +54,8 @@ def gui_update_task(taskid: float | str):
     column_styling = '30px 80px 700px 100px 60px 90px'
     classes_styling = 'w-full'
 
+    red_style = Tailwind().text_color('red-600').font_weight('bold')
+
     with container:
         with ui.grid(columns=column_styling).classes(classes_styling) as row:
             ui.label('ID')
@@ -67,7 +69,9 @@ def gui_update_task(taskid: float | str):
             id_ = str(get_task_id(task))
             current_duration_string = timedelta_to_string(get_duration(task))
             with ui.grid(columns=column_styling).classes(classes_styling) as row:
-                ui.label(id_)
+                id_label = ui.label(id_)
+                if str(taskid) == id_:
+                    red_style.apply(id_label)
                 ui.label(task['date'])
                 ui.input(value=task['title'])
                 ui.select({s.title(): s.value for s in TaskStatus}, value=get_task_status(task).title())
