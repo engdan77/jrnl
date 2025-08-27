@@ -1,4 +1,5 @@
 import json
+from typing import Annotated
 
 import cyclopts
 from loguru import logger
@@ -62,7 +63,15 @@ def set_status(taskid: float, status: TaskStatus):
 
 @cli_app.command
 def update_task(taskid: float | None = None):
-    """Update a task."""
+    """
+    Updates a task with the specified task ID. If no task ID is provided, the
+    update will target the default or currently selected task in the system.
+
+    Parameters
+    ----------
+    taskid
+        The unique identifier of the task to be updated. Defaults to None and will return all tasks.
+    """
     gui_update_task(taskid=taskid)
     logger.info(f"Task: {taskid} updated")
 
