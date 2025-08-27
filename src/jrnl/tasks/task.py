@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 TASK_ID_PHRASE: Final = "@task:"
+DURATION_PHRASE: Final = "@duration:"
 
 
 def has_task_status(entry: "Entry") -> bool:
@@ -28,6 +29,10 @@ def has_task_id(entry: "Entry") -> bool:
             return True
     else:
         return False
+
+
+def has_duration(entry: "Entry") -> bool:
+    return bool(re.match(fr".*?{DURATION_PHRASE}(\w+).*", entry.text))
 
 
 def get_task_id(entry: Union["Entry", str, dict]) -> int | float | None:
@@ -170,7 +175,7 @@ def timedelta_to_string(td: datetime.timedelta) -> str:
 
 def get_duration(entry: Union["Entry", dict]) -> datetime.timedelta:
     title = entry['title'] if isinstance(entry, dict) else entry.title
-    if duration := re.match(r".*?@duration:(\w+).*", title):
+    if duration := re.match(fr".*?{DURATION_PHRASE}(\w+).*", title):
         g = duration.group(1)
         return string_to_timedelta(g)
     else:
@@ -178,7 +183,7 @@ def get_duration(entry: Union["Entry", dict]) -> datetime.timedelta:
 
 
 def remove_duration(entry: "Entry") -> "Entry":
-    entry.title = re.sub(r"@duration:\w+", "", entry.title)
+    entry.title = re.sub(fr"{DURATION_PHRASE}\w+", "", entry.title)
     return entry
 
 
@@ -187,14 +192,14 @@ def add_duration(entry: "Entry", duration: datetime.timedelta) -> "Entry":
     new_duration = current_duration + duration
     duration_string = timedelta_to_string(new_duration)
     remove_duration(entry)
-    entry.title = f"{entry.title} @duration:{duration_string}"
+    entry.title = f"{entry.title} {DURATION_PHRASE}{duration_string}"
     return entry
 
 
 def replace_duration(entry: "Entry", duration: datetime.timedelta) -> "Entry":
     duration_string = timedelta_to_string(duration)
     remove_duration(entry)
-    entry.title = f"{entry.title} @duration:{duration_string}"
+    entry.title = f"{entry.title} {DURATION_PHRASE}{duration_string}"
     return entry
 
 
@@ -214,8 +219,11 @@ def apply_initial_task_properties(entry: "Entry", journal: "Journal", override_t
             else:
                 set_task_id(task_id + 0.1, entry)
 
-    if not has_task_status(entry):
+    if not has_task_status(entry) and has_duration(entry):
         entry = set_task_status(entry, status=TaskStatus.completed)
+    elif not has_task_status(entry) and not has_duration(entry):
+        entry = set_task_status(entry, status=TaskStatus.todo)
+
     return entry
 
 

@@ -1,27 +1,16 @@
 import datetime
 import re
 
-from shared_memory_dict import SharedMemoryDict
 from loguru import logger
 
 from nicegui import ui, app, Tailwind
 
+from jrnl.tasks.sharedmem import set_shared, get_shared
 from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, get_task_status, \
     get_duration, timedelta_to_string, update_task_by_gui_columns
 from jrnl.tasks.protocols import Columns, TaskStatus
 
 rows = []
-
-
-def set_shared(value):
-    shared_mem = SharedMemoryDict(name='shared', size=16)
-    shared_mem['value'] = value
-
-
-def get_shared():
-    shared_mem = SharedMemoryDict(name='shared', size=16)
-    return shared_mem['value']
-
 
 set_shared('1.0')  # Shared memory so that "lambda" functions can access the value.
 

@@ -4,6 +4,9 @@ import cyclopts
 from loguru import logger
 from enum import StrEnum, auto
 
+import jrnl.tasks.gui
+import jrnl.tasks.sharedmem
+from jrnl.tasks.gui import gui_update_task
 from jrnl.tasks.output import search_result_to_alfred
 from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks, set_status_to_task, get_journal_file_path
 from jrnl.tasks.protocols import TaskStatus
@@ -58,6 +61,13 @@ def set_status(taskid: float, status: TaskStatus):
 
 
 @cli_app.command
+def update_task(taskid: float):
+    """Update a task."""
+    gui_update_task(taskid=taskid)
+    logger.info(f"Task: {taskid} updated")
+
+
+@cli_app.command
 def journal_file():
     """Print the path to the journal file."""
     j = get_journal_file_path()
@@ -65,7 +75,9 @@ def journal_file():
 
 
 def main():
+    print(f'{ jrnl.tasks.sharedmem.share_mem_pointer=}')
     cli_app()
+    jrnl.tasks.sharedmem.close_shared()
 
 
 if __name__ == "__main__":
