@@ -75,7 +75,6 @@ def journal_file():
 
 
 def main():
-    print(f'{ jrnl.tasks.sharedmem.share_mem_pointer=}')
     cli_app()
     jrnl.tasks.sharedmem.close_shared()
 
