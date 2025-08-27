@@ -87,7 +87,7 @@ def gui_update_task(taskid: float | str):
 
     ui.button('Save', on_click=save_rows)
 
-    ui.run(native=True, window_size=(1280, 720))
+    ui.run(native=True, reload=False, window_size=(1280, 720))
 
 
 if __name__ in {"__main__", "__mp_main__"}:
