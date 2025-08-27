@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 TASK_ID_PHRASE: Final = "@task:"
-DURATION_PHRASE: Final = "@duration:"
+DURATION_PHRASE: Final = "@spent:"
 
 
 def has_task_status(entry: "Entry") -> bool:
