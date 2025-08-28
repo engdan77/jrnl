@@ -2,11 +2,12 @@ import datetime
 import json
 import re
 import logging
+from collections import defaultdict
 from typing import TYPE_CHECKING, Union, Final, Iterable
 
 import dateparser
 
-from jrnl.tasks.protocols import Columns, TaskStatus, EntryDict, DaySummary
+from jrnl.tasks.protocols import Columns, TaskStatus, TaskEntryDict, DaySummary
 
 if TYPE_CHECKING:
     pass
@@ -329,7 +330,17 @@ def remove_redundant_tags(tags: list[str]) -> list[str]:
     return output_tags
 
 
-def get_tasks_by_date(date_string: str, task_statuses: Iterable[TaskStatus] = (TaskStatus.completed,)) -> list[EntryDict]:
+def clean_task_title_by_str(title: str) -> str:
+    t = re.sub(rf"{TASK_ID_PHRASE}(\d+\.\d+)?", "", title).strip()
+    t = re.sub(fr"{DURATION_PHRASE}\w+", "", t)
+    for status in TaskStatus:
+        t = re.sub(
+            rf"@{status.value}(:\d+-\d+-\d+)?", "", t.strip()
+        )
+    return t
+
+
+def get_tasks_by_date(date_string: str, task_statuses: Iterable[TaskStatus] = (TaskStatus.completed,)) -> list[TaskEntryDict]:
     """
     Return all (associated) tasks with the given date.
     Also ensure that redundant tags are removed.
@@ -347,12 +358,53 @@ def get_tasks_by_date(date_string: str, task_statuses: Iterable[TaskStatus] = (T
     return output_tasks
 
 
-def get_day_summary_by_entries(entries: list[EntryDict]) -> list[DaySummary]:
-    ...
+def get_tasks_grouped_by_tags(tasks: list[TaskEntryDict]) -> dict[tuple[str], list[TaskEntryDict]]:
+    tags_grouped_tasks = defaultdict(list)
+    for task in tasks:
+        tags_tuple = tuple(sorted(task['tags']))
+        tags_grouped_tasks[tags_tuple].append(task)
+    return tags_grouped_tasks
+
+
+def concat_title_body(title: str, body: str) -> str:
+    return f"* {title}\n    * {body}".strip() if body else f"* {title}".strip()
+
+
+def get_day_summary_by_tasks(input_tasks: list[TaskEntryDict]) -> list[DaySummary]:
+    summary_per_tags: list[DaySummary] = []
+    tasks_grouped_by_tags = get_tasks_grouped_by_tags(input_tasks)
+    for tags, tasks in tasks_grouped_by_tags.items():
+        date = tasks[0]['date']
+        text_summary_list: list = []
+        task_ids: list[float] = []
+        starred_list: list[bool] = []
+        total_time = datetime.timedelta()
+        for task in sorted(tasks, key=lambda x: x['starred']):
+            # TODO: ensure starred comes first
+            task_id = get_task_id(task)
+            task_ids.append(task_id)
+            starred_list.append(task['starred'])
+            task_duration = get_duration(task)
+            total_time += task_duration
+            task_title = clean_task_title_by_str(task['title'])  # Remove task ID and status from title
+            task_body = task['body']
+            task_text = concat_title_body(task_title, task_body)
+            text_summary_list.append(task_text)
+        day_summary = DaySummary(
+            date=date,
+            text_summary='\n'.join(text_summary_list),
+            task_ids=task_ids,
+            starred=any(starred_list),
+            total_time=total_time,
+            tags=tags,
+        )
+        summary_per_tags.append(day_summary)
+    return summary_per_tags
 
 
 def sum_up_by_date(date_string: str):
     tasks = get_tasks_by_date(date_string)
+    summary_per_tags = get_day_summary_by_tasks(tasks)
     ...
 
 

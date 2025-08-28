@@ -1,6 +1,7 @@
 import dataclasses
+import datetime
 from enum import StrEnum, auto
-from typing import TypedDict, Protocol
+from typing import TypedDict, Protocol, Iterable
 
 
 class NiceGuiElement(Protocol):
@@ -12,7 +13,7 @@ class NiceGuiElement(Protocol):
     def text(self): ...
 
 
-class EntryDict(TypedDict):
+class TaskEntryDict(TypedDict):
     title: str
     body: str
     date: str
@@ -54,10 +55,11 @@ class Columns:
 class DaySummary(TypedDict):
     date: str
     tags: list[str]
-    total_minutes: str
+    total_time: datetime.timedelta
     task_ids: list[float]
     text_summary: str
     starred: bool
+    tags: Iterable[str]
 
 
 class TaskStatus(StrEnum):
