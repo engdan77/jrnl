@@ -38,6 +38,10 @@ def has_duration(entry: "Entry") -> bool:
     return bool(re.match(fr".*?{DURATION_PHRASE}(\w+).*", entry.text))
 
 
+def has_parent_task(task_id: float) -> bool:
+    return not task_id % 1 == 0.0
+
+
 def get_task_id(entry: Union["Entry", str, dict]) -> int | float | None:
     try:
         title = entry.text if not isinstance(entry, str) else entry
@@ -366,8 +370,21 @@ def get_tasks_grouped_by_tags(tasks: list[TaskEntryDict]) -> dict[tuple[str], li
     return tags_grouped_tasks
 
 
-def concat_title_body(title: str, body: str) -> str:
-    return f"* {title}\n    * {body}".strip() if body else f"* {title}".strip()
+def concat_title_body(title: str, body: str, extra: str) -> str:
+    output_lines = [f"* {title}".strip()]
+    if body:
+        output_lines.append(f"    * {body}".strip())
+    if extra:
+        output_lines.append(f"    * Continuation of {extra}".strip())
+    return "\n".join(output_lines)
+
+
+def get_title_of_parent_task(task_id: float) -> str:
+    if not has_parent_task(task_id):
+        return ""
+    parent_task_id = float(int(task_id))
+    parent_task = get_task_by_id(parent_task_id)
+    return parent_task['title']
 
 
 def get_day_summary_by_tasks(input_tasks: list[TaskEntryDict]) -> list[DaySummary]:
@@ -388,7 +405,8 @@ def get_day_summary_by_tasks(input_tasks: list[TaskEntryDict]) -> list[DaySummar
             total_time += task_duration
             task_title = clean_task_title_by_str(task['title'])  # Remove task ID and status from title
             task_body = task['body']
-            task_text = concat_title_body(task_title, task_body)
+            parent_task_title = get_title_of_parent_task(task_id)
+            task_text = concat_title_body(task_title, task_body, extra=parent_task_title)
             text_summary_list.append(task_text)
         day_summary = DaySummary(
             date=date,
