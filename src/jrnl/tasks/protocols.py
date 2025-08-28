@@ -3,6 +3,8 @@ import datetime
 from enum import StrEnum, auto
 from typing import TypedDict, Protocol, Iterable
 
+from jrnl.tasks.time import timedelta_to_string
+
 
 class NiceGuiElement(Protocol):
 

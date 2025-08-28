@@ -8,8 +8,9 @@ from nicegui import ui, app, Tailwind
 from jrnl import __version__
 from jrnl.tasks.sharedmem import set_shared, get_shared
 from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, get_task_status, \
-    get_duration, timedelta_to_string, update_task_by_gui_columns, get_all_tasks, get_next_taskid, \
+    get_duration, update_task_by_gui_columns, get_all_tasks, get_next_taskid, \
     get_all_tasks_as_dict, get_tasks_by_date
+from jrnl.tasks.time import timedelta_to_string
 from jrnl.tasks.protocols import Columns, TaskStatus
 
 rows = []

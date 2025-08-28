@@ -1,5 +1,7 @@
 import datetime
+import functools
 import json
+import operator
 import re
 import logging
 from collections import defaultdict
@@ -8,6 +10,7 @@ from typing import TYPE_CHECKING, Union, Final, Iterable
 import dateparser
 
 from jrnl.tasks.protocols import Columns, TaskStatus, TaskEntryDict, DaySummary
+from jrnl.tasks.time import string_to_timedelta, timedelta_to_string
 
 if TYPE_CHECKING:
     pass
@@ -156,28 +159,6 @@ def update_task_by_gui_columns(columns: Columns):
             entry = replace_duration(entry, duration)
         logger.info(f"Updated task: {entry.title}")
     journal.write(journal_file)
-
-
-def string_to_timedelta(s: str) -> datetime.timedelta:
-    g = s.strip()
-    days = int(d.group(1)) if (d := re.match(r".*?(\d+)d.*", g)) else 0
-    hours = int(h.group(1)) if (h := re.match(r".*?(\d+)h.*", g)) else 0
-    mins = int(m.group(1)) if (m := re.match(r".*?(\d+)m.*", g)) else 0
-    return datetime.timedelta(days=int(days), hours=int(hours), minutes=int(mins))
-
-
-def timedelta_to_string(td: datetime.timedelta) -> str:
-    output_string = ""
-    days = td.days
-    hours = td.seconds // 3600
-    mins = (td.seconds // 60) % 60
-    if days:
-        output_string += f"{days}d"
-    if hours:
-        output_string += f"{hours}h"
-    if mins:
-        output_string += f"{mins}m"
-    return output_string.strip()
 
 
 def get_duration(entry: Union["Entry", dict]) -> datetime.timedelta:
@@ -420,9 +401,101 @@ def get_day_summary_by_tasks(input_tasks: list[TaskEntryDict]) -> list[DaySummar
     return summary_per_tags
 
 
+def calc_total_duration(summaries: list[DaySummary]) -> datetime.timedelta:
+    return functools.reduce(operator.add, [s['total_time'] for s in summaries], datetime.timedelta())
+
+
+def adjust_time(s: list[DaySummary], add_ratio: float = 0.01) -> list[DaySummary]:
+    td = datetime.timedelta
+    for item in s:
+        current_time = item['total_time'].total_seconds()
+        new_time = current_time + (current_time * add_ratio)
+        item['total_time'] = td(seconds=int(new_time))
+    return s
+
+
+def normalize_time_summaries(summary_per_tags: list[DaySummary],
+                             extra_non_project_duration: datetime.timedelta = datetime.timedelta(hours=1),
+                             working_hours_per_day: datetime.timedelta = datetime.timedelta(hours=8)) -> list[DaySummary]:
+    """Align the timespan of each summary to the longest one."""
+
+    today = f'{datetime.date.today():%Y-%m-%d}'
+    non_project = DaySummary(
+        date=today,
+        text_summary='* Non-project task',
+        task_ids=[],
+        starred=False,
+        total_time=extra_non_project_duration,
+        tags=['@non-project'],
+    )
+
+    current_sum_durations = calc_total_duration(summary_per_tags)
+    least_hours_required = working_hours_per_day - extra_non_project_duration
+
+    if least_hours_required < current_sum_durations < working_hours_per_day:
+        logger.info(f"Total time of all tasks is less than working hours per day, adding little extra non-project time.")
+        non_project.total_time = working_hours_per_day - current_sum_durations
+        summary_per_tags.append(non_project)
+        return summary_per_tags
+    elif current_sum_durations < least_hours_required:
+        summary_per_tags = increase_times(summary_per_tags, least_hours_required)
+        summary_per_tags.append(non_project)
+        logger.info(f"New total time: {calc_total_duration(summary_per_tags)}")
+        return summary_per_tags
+    elif current_sum_durations > working_hours_per_day:
+        summary_per_tags = decrease_times(summary_per_tags, working_hours_per_day)
+        logger.info(f"New total time: {calc_total_duration(summary_per_tags)}")
+        return summary_per_tags
+    return summary_per_tags
+
+
+def increase_times(summaries, least_hours_required, modify_ratio: float = 0.01) -> list[DaySummary]:
+    logger.info(f"Adjusting time a notch to align into reasonable margins evenly")
+    org_duration = calc_total_duration(summaries)
+    while calc_total_duration(summaries) < least_hours_required:
+        summaries = adjust_time(summaries, add_ratio=modify_ratio)
+    c = calc_total_duration(summaries)
+    minor_leftover = least_hours_required - c
+    summaries[-1]['total_time'] += minor_leftover
+    c = calc_total_duration(summaries)
+    logger.info(f"Adjusted time from {org_duration} to {c} = {1 - org_duration.total_seconds() / c.total_seconds():.1%}")
+    return summaries
+
+
+def decrease_times(summaries: list[DaySummary], working_hours_per_day, modify_ratio: float = -0.01) -> list[DaySummary]:
+    logger.info(f"Adjusting time a notch to align into reasonable margins evenly")
+    org_duration = calc_total_duration(summaries)
+    while calc_total_duration(summaries) > working_hours_per_day:
+        summaries = adjust_time(summaries, add_ratio=modify_ratio)
+    c = calc_total_duration(summaries)
+    minor_leftover = working_hours_per_day - c
+    summaries[-1]['total_time'] += minor_leftover
+    c = calc_total_duration(summaries)
+    logger.info(f"Adjusted time from {org_duration} to {c} = {1 - org_duration.total_seconds() / c.total_seconds():.1%}")
+    return summaries
+
+
+def day_summary_to_json(day_summaries: list[DaySummary]) -> str:
+    output_list = []
+    for d in day_summaries:
+        output_list.append(
+            {
+                "date": d["date"],
+                "text_summary": d["text_summary"],
+                "task_ids": d["task_ids"],
+                "starred": d["starred"],
+                "total_time": timedelta_to_string(d["total_time"]),
+                "tags": d["tags"],
+            }
+        )
+    return json.dumps(output_list, indent=4)
+
+
 def sum_up_by_date(date_string: str):
     tasks = get_tasks_by_date(date_string)
     summary_per_tags = get_day_summary_by_tasks(tasks)
+    summary_per_tags: list[DaySummary] = normalize_time_summaries(summary_per_tags)
+    print(day_summary_to_json(summary_per_tags))
     ...
 
 
