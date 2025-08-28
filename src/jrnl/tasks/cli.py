@@ -8,7 +8,8 @@ import jrnl.tasks.gui
 import jrnl.tasks.sharedmem
 from jrnl.tasks.gui import gui_update_task
 from jrnl.tasks.output import search_result_to_alfred
-from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks_as_dict, set_status_to_task, get_journal_file_path
+from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks_as_dict, \
+    set_status_to_task, get_journal_file_path, sum_up_by_date
 from jrnl.tasks.protocols import TaskStatus
 
 cli_app = cyclopts.App(help="[yellow]Manage tasks in your journal.[/yellow]", help_format='rich')
@@ -73,6 +74,20 @@ def update_task(taskid: float | None = None):
     """
     gui_update_task(taskid=taskid)
     logger.info(f"Task: {taskid} updated")
+
+
+@cli_app.command
+def sum_up_day(date_str: str):
+    """
+    Summarizes tasks for a specific day based on the provided date string.
+
+    Parameters
+    ----------
+    date_str
+        The date string in a valid format representing the day for which tasks need to be summarized.
+    """
+    summed_up_tasks = sum_up_by_date(date_str)
+    ...
 
 
 @cli_app.command

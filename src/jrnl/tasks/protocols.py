@@ -12,6 +12,15 @@ class NiceGuiElement(Protocol):
     def text(self): ...
 
 
+class EntryDict(TypedDict):
+    title: str
+    body: str
+    date: str
+    time: str
+    tags: list[str]
+    starred: bool
+
+
 class ColumnsDict(TypedDict):
     id: str
     date: str
@@ -39,6 +48,16 @@ class Columns:
             'starred': self.starred.value,
             'duration': self.duration.value,
         }
+
+
+@dataclasses.dataclass
+class DaySummary(TypedDict):
+    date: str
+    tags: list[str]
+    total_minutes: str
+    task_ids: list[float]
+    text_summary: str
+    starred: bool
 
 
 class TaskStatus(StrEnum):

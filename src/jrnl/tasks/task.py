@@ -2,9 +2,11 @@ import datetime
 import json
 import re
 import logging
-from typing import TYPE_CHECKING, Union, Final
+from typing import TYPE_CHECKING, Union, Final, Iterable
 
-from jrnl.tasks.protocols import Columns, TaskStatus
+import dateparser
+
+from jrnl.tasks.protocols import Columns, TaskStatus, EntryDict, DaySummary
 
 if TYPE_CHECKING:
     pass
@@ -310,6 +312,48 @@ def get_tasks_by_id(task_id: float):
         if int(get_task_id(task)) == int(task_id):
             output_tasks.append(task)
     return output_tasks
+
+
+def remove_redundant_tags(tags: list[str]) -> list[str]:
+    """
+    Removes redundant and unwanted tags from the given list of tags.
+
+    This function eliminates duplicate tags by converting the list
+    into a set and then applies a filter to remove tags that start
+    with specific prefixes like task phrases, duration phrases, or
+    task statuses. The final set of tags is returned as a list.
+    """
+    output_tags = list(set(tags))
+    output_tags = [_ for _ in output_tags if not any(_.startswith(p.strip(':')) for p in (TASK_ID_PHRASE, DURATION_PHRASE, *(f'@{t.value}' for t in TaskStatus)))]
+    ...
+    return output_tags
+
+
+def get_tasks_by_date(date_string: str, task_statuses: Iterable[TaskStatus] = (TaskStatus.completed,)) -> list[EntryDict]:
+    """
+    Return all (associated) tasks with the given date.
+    Also ensure that redundant tags are removed.
+    """
+    date = f'{dateparser.parse(date_string).date():%Y-%m-%d}'
+    output_tasks = []
+    all_tasks = get_all_tasks_as_dict()
+    for task in all_tasks['entries']:
+        task_status = get_task_status(task)
+        if task_status not in task_statuses:
+            continue
+        if date in task['date'] or any(f'@{t.value}:{date}' in task['title'] for t in task_statuses):
+            task['tags'] = remove_redundant_tags(task['tags'])
+            output_tasks.append(task)
+    return output_tasks
+
+
+def get_day_summary_by_entries(entries: list[EntryDict]) -> list[DaySummary]:
+    ...
+
+
+def sum_up_by_date(date_string: str):
+    tasks = get_tasks_by_date(date_string)
+    ...
 
 
 def example_tasks():
