@@ -421,9 +421,11 @@ def normalize_time_summaries(summary_per_tags: list[DaySummary],
                              working_hours_per_day: datetime.timedelta = datetime.timedelta(hours=8)) -> list[DaySummary]:
     """Align the timespan of each summary to the longest one."""
 
-    today = f'{datetime.date.today():%Y-%m-%d}'
+    assert len(summary_per_tags) > 0, "No tasks found, nothing to normalize."
+    current_date = summary_per_tags[0]['date']
+
     non_project = DaySummary(
-        date=today,
+        date=current_date,
         text_summary='- Non-project task',
         task_ids=[],
         starred=False,
@@ -512,7 +514,7 @@ def day_summary_to_csv(day_summaries: list[DaySummary]) -> str:
 
 def make_tasks_text_simpler(summaries: list[DaySummary]) -> list[DaySummary]:
     for idx, summary in enumerate(summaries):
-        logger.info(f"Making summary {idx + 1}/{len(summary)} simpler")
+        logger.info(f"Making summary {idx + 1}/{len(summary) + 1} simpler")
         s = summary['text_summary']
         summary['text_summary'] = make_task_bullets_simpler(s)
     return summaries
