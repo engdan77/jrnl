@@ -1,4 +1,5 @@
 import json
+from typing import Union
 
 import cyclopts
 from loguru import logger
@@ -77,19 +78,22 @@ def update_task(taskid: float | None = None):
 
 
 @cli_app.command
-def sum_up_day(date_str: str, output_format: TaskOutputFormat = TaskOutputFormat.json, simplify_texts: bool = False):
+def sum_up_day(date: str, to_date: str | None = None, output_format: TaskOutputFormat = TaskOutputFormat.json, simplify_texts: bool = False):
     """
-    Summarizes tasks for a given date and prints the output.
+    Summarizes tasks for a given date or date range and prints the result.
 
-    Parameters:
-        date_str: str
-            The date for which tasks should be summarized, in string format.
-        output_format: TaskOutputFormat
-            The desired output format for summarizing the tasks. Defaults to TaskOutputFormat.json.
-        simplify_texts: bool
-            Whether to use simplified texts in the summary using LLM. Defaults to False.
+    Parameters
+    ----------
+    date
+        The starting date for summarization in string format.
+    to_date
+        The ending date for summarization in string format, or None to specify a single day.
+    output_format
+        The format in which the summarized tasks will be presented. Defaults to TaskOutputFormat.json.
+    simplify_texts
+        Determines if task descriptions should be simplified. Defaults to False.
     """
-    summed_up_tasks = sum_up_by_date(date_str, output_format=output_format, simplify_texts=simplify_texts)
+    summed_up_tasks = sum_up_by_date(date, to_date_string=to_date, output_format=output_format, simplify_texts=simplify_texts)
     print(summed_up_tasks)
     ...
 

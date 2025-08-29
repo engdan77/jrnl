@@ -7,7 +7,7 @@ import operator
 import re
 from loguru import logger
 from collections import defaultdict
-from typing import TYPE_CHECKING, Union, Final, Iterable
+from typing import TYPE_CHECKING, Union, Final, Iterable, Generator
 from tabulate import tabulate
 
 import dateparser
@@ -511,25 +511,61 @@ def day_summary_to_csv(day_summaries: list[DaySummary]) -> str:
 
 
 def make_tasks_text_simpler(summaries: list[DaySummary]) -> list[DaySummary]:
-    for summary in summaries:
+    for idx, summary in enumerate(summaries):
+        logger.info(f"Making summary {idx + 1}/{len(summary)} simpler")
         s = summary['text_summary']
         summary['text_summary'] = make_task_bullets_simpler(s)
     return summaries
 
 
-def sum_up_by_date(date_string: str, output_format: TaskOutputFormat = TaskOutputFormat.json, simplify_texts: bool = False) -> str:
-    tasks = get_tasks_by_date(date_string)
-    summary_per_tags = get_day_summary_by_tasks(tasks)
-    summary_per_tags: list[DaySummary] = normalize_time_summaries(summary_per_tags)
+def get_date_range(from_date: str, to_date: str) -> Generator[str]:
+    from_date_dt = dateparser.parse(from_date)
+    to_date_dt = dateparser.parse(to_date)
+    for n in range(int((to_date_dt - from_date_dt).days) + 1):
+        yield f'{from_date_dt + datetime.timedelta(days=n):%Y-%m-%d}'
+
+
+def sum_up_by_date(date_string: str, to_date_string: str | None = None, output_format: TaskOutputFormat = TaskOutputFormat.json, simplify_texts: bool = False) -> str:
+    """
+    Summarizes tasks by date or a range of dates and formats the output based on the specified
+    format.
+
+    Args:
+        date_string (str): The starting date for processing in the format "YYYY-MM-DD".
+        to_date_string (str | None): The optional end date for the range, in the format "YYYY-MM-DD".
+            If not provided, only the date specified in "date_string" is processed.
+        output_format (TaskOutputFormat): Specifies how the summarized data should be formatted.
+            Possible formats are JSON, CSV, or Pretty Table.
+        simplify_texts (bool): If True, simplifies the descriptions of the summaries.
+
+    Returns:
+        str: The task summaries formatted as a JSON string, CSV format, or a table-like string,
+        depending on the selected output format.
+    """
+    if to_date_string:
+        dates = get_date_range(date_string, to_date_string)
+    else:
+        dates = [date_string]
+
+    all_summaries: list[DaySummary] = []
+
+    date: str
+    for date in dates:
+        logger.info(f"Processing date: {date}")
+        tasks = get_tasks_by_date(date)
+        summary_per_tags = get_day_summary_by_tasks(tasks)
+        summary_per_tags: list[DaySummary] = normalize_time_summaries(summary_per_tags)
+        all_summaries.extend(summary_per_tags)
+
     if simplify_texts:
-        summary_per_tags = make_tasks_text_simpler(summary_per_tags)
+        all_summaries = make_tasks_text_simpler(all_summaries)
     match output_format:
         case TaskOutputFormat.json:
-            return day_summary_to_json(summary_per_tags)
+            return day_summary_to_json(all_summaries)
         case TaskOutputFormat.csv:
-             return day_summary_to_csv(summary_per_tags)
+             return day_summary_to_csv(all_summaries)
         case TaskOutputFormat.pretty_table:
-            data = list(csv.reader(io.StringIO(day_summary_to_csv(summary_per_tags))))
+            data = list(csv.reader(io.StringIO(day_summary_to_csv(all_summaries))))
             return tabulate(data, headers="firstrow")
         case _:
             ...
