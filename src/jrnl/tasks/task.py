@@ -352,11 +352,11 @@ def get_tasks_grouped_by_tags(tasks: list[TaskEntryDict]) -> dict[tuple[str], li
 
 
 def concat_title_body(title: str, body: str, extra: str) -> str:
-    output_lines = [f"* {title}".strip()]
+    output_lines = [f"- {title}".strip()]
     if body:
-        output_lines.append(f"    * {body}".strip())
+        output_lines.append(f"    - {body}".strip())
     if extra:
-        output_lines.append(f"    * Continuation of {extra}".strip())
+        output_lines.append(f"    - Continuation of {extra}".strip())
     return "\n".join(output_lines)
 
 
@@ -405,11 +405,11 @@ def calc_total_duration(summaries: list[DaySummary]) -> datetime.timedelta:
     return functools.reduce(operator.add, [s['total_time'] for s in summaries], datetime.timedelta())
 
 
-def adjust_time(s: list[DaySummary], add_ratio: float = 0.01) -> list[DaySummary]:
+def adjust_time(s: list[DaySummary], steps_minutes: int = 15) -> list[DaySummary]:
     td = datetime.timedelta
     for item in s:
         current_time = item['total_time'].total_seconds()
-        new_time = current_time + (current_time * add_ratio)
+        new_time = current_time + (60 * steps_minutes)
         item['total_time'] = td(seconds=int(new_time))
     return s
 
@@ -449,11 +449,11 @@ def normalize_time_summaries(summary_per_tags: list[DaySummary],
     return summary_per_tags
 
 
-def increase_times(summaries, least_hours_required, modify_ratio: float = 0.01) -> list[DaySummary]:
+def increase_times(summaries, least_hours_required) -> list[DaySummary]:
     logger.info(f"Adjusting time a notch to align into reasonable margins evenly")
     org_duration = calc_total_duration(summaries)
     while calc_total_duration(summaries) < least_hours_required:
-        summaries = adjust_time(summaries, add_ratio=modify_ratio)
+        summaries = adjust_time(summaries, steps_minutes=15)
     c = calc_total_duration(summaries)
     minor_leftover = least_hours_required - c
     summaries[-1]['total_time'] += minor_leftover
@@ -462,11 +462,11 @@ def increase_times(summaries, least_hours_required, modify_ratio: float = 0.01) 
     return summaries
 
 
-def decrease_times(summaries: list[DaySummary], working_hours_per_day, modify_ratio: float = -0.01) -> list[DaySummary]:
+def decrease_times(summaries: list[DaySummary], working_hours_per_day) -> list[DaySummary]:
     logger.info(f"Adjusting time a notch to align into reasonable margins evenly")
     org_duration = calc_total_duration(summaries)
     while calc_total_duration(summaries) > working_hours_per_day:
-        summaries = adjust_time(summaries, add_ratio=modify_ratio)
+        summaries = adjust_time(summaries, steps_minutes=-15)
     c = calc_total_duration(summaries)
     minor_leftover = working_hours_per_day - c
     summaries[-1]['total_time'] += minor_leftover

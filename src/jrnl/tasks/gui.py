@@ -6,16 +6,13 @@ from loguru import logger
 from nicegui import ui, app, Tailwind
 
 from jrnl import __version__
-from jrnl.tasks.sharedmem import set_shared, get_shared
+from jrnl.tasks.sharedmem import set_shared, get_shared, create_shared, close_shared
 from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, get_task_status, \
-    get_duration, update_task_by_gui_columns, get_all_tasks, get_next_taskid, \
-    get_all_tasks_as_dict, get_tasks_by_date
+    get_duration, update_task_by_gui_columns, get_all_tasks, get_next_taskid
 from jrnl.tasks.time import timedelta_to_string
 from jrnl.tasks.protocols import Columns, TaskStatus
 
 rows = []
-
-set_shared('1.0')  # Shared memory so that "lambda" functions can access the value.
 
 
 def save_rows():
@@ -37,9 +34,14 @@ def validate_duration(duration: str):
 
 
 def gui_update_task(taskid: float | str | None = None):
+    journal, journal_file = get_journal()
+
+    create_shared()
     if taskid is None:
         tasks = get_all_tasks()
     else:
+        logger.info(f'Updating task: {taskid}')
+        set_shared(get_next_sub_taskid(journal, taskid))
         tasks = get_tasks_by_id(float(taskid))
 
     ui.markdown("#### Tasks ✅")
@@ -47,7 +49,6 @@ def gui_update_task(taskid: float | str | None = None):
     ui.dark_mode().enable()
     container = ui.column()
 
-    journal, journal_file = get_journal()
     if taskid is not None:
         set_shared(get_next_sub_taskid(journal, taskid))
     else:
@@ -102,8 +103,5 @@ def gui_update_task(taskid: float | str | None = None):
 
     ui.button(add_label, on_click=add_task)
     ui.button('Save', on_click=save_rows)
+    ui.on_shutdown = close_shared
     ui.run(native=True, reload=False, window_size=(1280, 720))
-
-
-if __name__ in {"__main__", "__mp_main__"}:
-    gui_update_task(taskid=5.1)

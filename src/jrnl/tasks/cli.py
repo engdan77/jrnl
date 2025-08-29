@@ -98,8 +98,10 @@ def journal_file():
 
 
 def main():
+    logger.info(f'Starting version JRNL {jrnl.__version__}')
     cli_app()
     jrnl.tasks.sharedmem.close_shared()
+    logger.info('Exiting JRNL')
 
 
 if __name__ in {"__main__", "__mp_main__"}:
