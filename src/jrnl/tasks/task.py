@@ -1,5 +1,7 @@
+import csv
 import datetime
 import functools
+import io
 import json
 import operator
 import re
@@ -9,7 +11,7 @@ from typing import TYPE_CHECKING, Union, Final, Iterable
 
 import dateparser
 
-from jrnl.tasks.protocols import Columns, TaskStatus, TaskEntryDict, DaySummary
+from jrnl.tasks.protocols import Columns, TaskStatus, TaskEntryDict, DaySummary, TaskOutputFormat
 from jrnl.tasks.time import string_to_timedelta, timedelta_to_string
 
 if TYPE_CHECKING:
@@ -319,7 +321,7 @@ def clean_task_title_by_str(title: str) -> str:
         t = re.sub(
             rf"@{status.value}(:\d+-\d+-\d+)?", "", t.strip()
         )
-    return t
+    return t.strip()
 
 
 def get_tasks_by_date(date_string: str, task_statuses: Iterable[TaskStatus] = (TaskStatus.completed,)) -> list[TaskEntryDict]:
@@ -353,7 +355,8 @@ def concat_title_body(title: str, body: str, extra: str) -> str:
     if body:
         output_lines.append(f"    - {body}".strip())
     if extra:
-        output_lines.append(f"    - Continuation of {extra}".strip())
+        linked_task_title = clean_task_title_by_str(extra)
+        output_lines.append(f"    - Continuation of the task \"{linked_task_title}\"".strip())
     return "\n".join(output_lines)
 
 
@@ -362,7 +365,7 @@ def get_title_of_parent_task(task_id: float) -> str:
         return ""
     parent_task_id = float(int(task_id))
     parent_task = get_task_by_id(parent_task_id)
-    return parent_task['title']
+    return parent_task['title'] if isinstance(parent_task, dict) else parent_task.title
 
 
 def get_day_summary_by_tasks(input_tasks: list[TaskEntryDict]) -> list[DaySummary]:
@@ -419,7 +422,7 @@ def normalize_time_summaries(summary_per_tags: list[DaySummary],
     today = f'{datetime.date.today():%Y-%m-%d}'
     non_project = DaySummary(
         date=today,
-        text_summary='* Non-project task',
+        text_summary='- Non-project task',
         task_ids=[],
         starred=False,
         total_time=extra_non_project_duration,
@@ -475,7 +478,7 @@ def decrease_times(summaries: list[DaySummary], working_hours_per_day) -> list[D
     return summaries
 
 
-def day_summary_to_json(day_summaries: list[DaySummary]) -> str:
+def day_summary_to_dict(day_summaries: list[DaySummary]) -> list[DaySummary]:
     output_list = []
     for d in day_summaries:
         output_list.append(
@@ -488,15 +491,34 @@ def day_summary_to_json(day_summaries: list[DaySummary]) -> str:
                 "tags": d["tags"],
             }
         )
+    return output_list
+
+
+def day_summary_to_json(day_summaries: list[DaySummary]) -> str:
+    output_list = day_summary_to_dict(day_summaries)
     return json.dumps(output_list, indent=4)
 
 
-def sum_up_by_date(date_string: str):
+def day_summary_to_csv(day_summaries: list[DaySummary]) -> str:
+    rows = day_summary_to_dict(day_summaries)
+    output_csv = io.StringIO()
+    writer = csv.DictWriter(output_csv, fieldnames=rows[0].keys())
+    writer.writeheader()
+    writer.writerows(rows)
+    return output_csv.getvalue()
+
+
+def sum_up_by_date(date_string: str, output_format: TaskOutputFormat = TaskOutputFormat.json) -> str:
     tasks = get_tasks_by_date(date_string)
     summary_per_tags = get_day_summary_by_tasks(tasks)
     summary_per_tags: list[DaySummary] = normalize_time_summaries(summary_per_tags)
-    print(day_summary_to_json(summary_per_tags))
-    ...
+    match output_format:
+        case TaskOutputFormat.json:
+            return day_summary_to_json(summary_per_tags)
+        case TaskOutputFormat.csv:
+             return day_summary_to_csv(summary_per_tags)
+        case _:
+            ...
 
 
 def example_tasks():

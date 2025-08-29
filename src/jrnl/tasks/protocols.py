@@ -57,7 +57,7 @@ class Columns:
 class DaySummary(TypedDict):
     date: str
     tags: list[str]
-    total_time: datetime.timedelta
+    total_time: datetime.timedelta | str
     task_ids: list[float]
     text_summary: str
     starred: bool
@@ -67,3 +67,8 @@ class DaySummary(TypedDict):
 class TaskStatus(StrEnum):
     todo = auto()
     completed = auto()
+
+
+class TaskOutputFormat(StrEnum):
+    json = auto()
+    csv = auto()

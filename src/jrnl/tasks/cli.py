@@ -10,7 +10,7 @@ from jrnl.tasks.gui import gui_update_task
 from jrnl.tasks.output import search_result_to_alfred
 from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks_as_dict, \
     set_status_to_task, get_journal_file_path, sum_up_by_date
-from jrnl.tasks.protocols import TaskStatus
+from jrnl.tasks.protocols import TaskStatus, TaskOutputFormat
 
 cli_app = cyclopts.App(help="[yellow]Manage tasks in your journal.[/yellow]", help_format='rich')
 
@@ -77,16 +77,19 @@ def update_task(taskid: float | None = None):
 
 
 @cli_app.command
-def sum_up_day(date_str: str):
+def sum_up_day(date_str: str, output_format: TaskOutputFormat = TaskOutputFormat.json):
     """
-    Summarizes tasks for a specific day based on the provided date string.
+    Summarizes tasks for a given date and outputs them in the specified format.
 
-    Parameters
-    ----------
-    date_str
-        The date string in a valid format representing the day for which tasks need to be summarized.
+    Parameters:
+        date_str: str
+            The date for which the tasks need to be summarized, provided as a string.
+        output_format: TaskOutputFormat
+            The format in which the summarized task details should be output,
+            with a default of TaskOutputFormat.json.
     """
-    summed_up_tasks = sum_up_by_date(date_str)
+    summed_up_tasks = sum_up_by_date(date_str, output_format=output_format)
+    print(summed_up_tasks)
     ...
 
 
