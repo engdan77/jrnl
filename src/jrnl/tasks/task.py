@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Union, Final, Iterable
 
 import dateparser
 
+from jrnl.tasks.llm import make_task_bullets_simpler
 from jrnl.tasks.protocols import Columns, TaskStatus, TaskEntryDict, DaySummary, TaskOutputFormat
 from jrnl.tasks.time import string_to_timedelta, timedelta_to_string
 
@@ -508,10 +509,18 @@ def day_summary_to_csv(day_summaries: list[DaySummary]) -> str:
     return output_csv.getvalue()
 
 
-def sum_up_by_date(date_string: str, output_format: TaskOutputFormat = TaskOutputFormat.json) -> str:
+def make_tasks_text_simpler(summaries: list[DaySummary]) -> list[DaySummary]:
+    for summary in summaries:
+        s = summary['text_summary']
+        summary['text_summary'] = make_task_bullets_simpler(s)
+
+
+def sum_up_by_date(date_string: str, output_format: TaskOutputFormat = TaskOutputFormat.json, simplify_texts: bool = False) -> str:
     tasks = get_tasks_by_date(date_string)
     summary_per_tags = get_day_summary_by_tasks(tasks)
     summary_per_tags: list[DaySummary] = normalize_time_summaries(summary_per_tags)
+    if simplify_texts:
+        summary_per_tags = make_tasks_text_simpler(summary_per_tags)
     match output_format:
         case TaskOutputFormat.json:
             return day_summary_to_json(summary_per_tags)

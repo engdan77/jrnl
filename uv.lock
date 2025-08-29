@@ -470,6 +470,7 @@ dependencies = [
     { name = "mdurl" },
     { name = "more-itertools" },
     { name = "nicegui" },
+    { name = "ollama" },
     { name = "parsedatetime" },
     { name = "pycparser" },
     { name = "pygments" },
@@ -505,6 +506,7 @@ requires-dist = [
     { name = "mdurl", specifier = "==0.1.2" },
     { name = "more-itertools", specifier = "==10.7.0" },
     { name = "nicegui", specifier = ">=2.23.0" },
+    { name = "ollama", specifier = ">=0.5.3" },
     { name = "parsedatetime", specifier = "==2.6" },
     { name = "pycparser", specifier = "==2.22" },
     { name = "pygments", specifier = "==2.19.2" },
@@ -694,6 +696,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d7/56/baa30ab475f3684193384505603d8871ae9a729c87d077a826889a119a9e/nicegui-2.23.0.tar.gz", hash = "sha256:8180fcba79515fa14ce03977c31282aa17627822163d482f591020ff93b1efe0", size = 13108139, upload-time = "2025-08-21T15:25:34.645Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e6/9e/0080d3866cad549088a843b397ebeec3d6b214f55cbdc863162dcd65a10f/nicegui-2.23.0-py3-none-any.whl", hash = "sha256:eb2fdc79ec29069a7d249bca4dd36686b441599052483c29a41a28baa2c18a2f", size = 13495391, upload-time = "2025-08-21T15:25:31.331Z" },
+]
+
+[[package]]
+name = "ollama"
+version = "0.5.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/91/6d/ae96027416dcc2e98c944c050c492789502d7d7c0b95a740f0bb39268632/ollama-0.5.3.tar.gz", hash = "sha256:40b6dff729df3b24e56d4042fd9d37e231cee8e528677e0d085413a1d6692394", size = 43331, upload-time = "2025-08-07T21:44:10.422Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/be/f6/2091e50b8b6c3e6901f6eab283d5efd66fb71c86ddb1b4d68766c3eeba0f/ollama-0.5.3-py3-none-any.whl", hash = "sha256:a8303b413d99a9043dbf77ebf11ced672396b59bec27e6d5db67c88f01b279d2", size = 13490, upload-time = "2025-08-07T21:44:09.353Z" },
 ]
 
 [[package]]

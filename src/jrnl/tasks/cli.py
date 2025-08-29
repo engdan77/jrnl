@@ -77,18 +77,19 @@ def update_task(taskid: float | None = None):
 
 
 @cli_app.command
-def sum_up_day(date_str: str, output_format: TaskOutputFormat = TaskOutputFormat.json):
+def sum_up_day(date_str: str, output_format: TaskOutputFormat = TaskOutputFormat.json, simplify_texts: bool = False):
     """
-    Summarizes tasks for a given date and outputs them in the specified format.
+    Summarizes tasks for a given date and prints the output.
 
     Parameters:
         date_str: str
-            The date for which the tasks need to be summarized, provided as a string.
+            The date for which tasks should be summarized, in string format.
         output_format: TaskOutputFormat
-            The format in which the summarized task details should be output,
-            with a default of TaskOutputFormat.json.
+            The desired output format for summarizing the tasks. Defaults to TaskOutputFormat.json.
+        simplify_texts: bool
+            Whether to use simplified texts in the summary using LLM. Defaults to False.
     """
-    summed_up_tasks = sum_up_by_date(date_str, output_format=output_format)
+    summed_up_tasks = sum_up_by_date(date_str, output_format=output_format, simplify_texts=simplify_texts)
     print(summed_up_tasks)
     ...
 
