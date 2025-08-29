@@ -3,7 +3,7 @@ import functools
 import json
 import operator
 import re
-import logging
+from loguru import logger
 from collections import defaultdict
 from typing import TYPE_CHECKING, Union, Final, Iterable
 
@@ -14,9 +14,6 @@ from jrnl.tasks.time import string_to_timedelta, timedelta_to_string
 
 if TYPE_CHECKING:
     pass
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
 
 TASK_ID_PHRASE: Final = "@task:"
 DURATION_PHRASE: Final = "@spent:"
@@ -452,6 +449,9 @@ def normalize_time_summaries(summary_per_tags: list[DaySummary],
 def increase_times(summaries, least_hours_required) -> list[DaySummary]:
     logger.info(f"Adjusting time a notch to align into reasonable margins evenly")
     org_duration = calc_total_duration(summaries)
+    if not org_duration:
+        logger.warning('No tasks found, nothing to adjust.')
+        raise SystemExit(1)
     while calc_total_duration(summaries) < least_hours_required:
         summaries = adjust_time(summaries, steps_minutes=15)
     c = calc_total_duration(summaries)
