@@ -513,6 +513,7 @@ def make_tasks_text_simpler(summaries: list[DaySummary]) -> list[DaySummary]:
     for summary in summaries:
         s = summary['text_summary']
         summary['text_summary'] = make_task_bullets_simpler(s)
+    return summaries
 
 
 def sum_up_by_date(date_string: str, output_format: TaskOutputFormat = TaskOutputFormat.json, simplify_texts: bool = False) -> str:
