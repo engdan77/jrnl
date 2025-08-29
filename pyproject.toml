@@ -34,6 +34,7 @@ dependencies = [
     "ruamel-yaml-clib==0.2.12",
     "shared-memory-dict>=0.7.2",
     "six==1.17.0",
+    "tabulate>=0.9.0",
     "tzlocal==5.3.1",
 ]
 

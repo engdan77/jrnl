@@ -8,6 +8,7 @@ import re
 from loguru import logger
 from collections import defaultdict
 from typing import TYPE_CHECKING, Union, Final, Iterable
+from tabulate import tabulate
 
 import dateparser
 
@@ -527,6 +528,9 @@ def sum_up_by_date(date_string: str, output_format: TaskOutputFormat = TaskOutpu
             return day_summary_to_json(summary_per_tags)
         case TaskOutputFormat.csv:
              return day_summary_to_csv(summary_per_tags)
+        case TaskOutputFormat.pretty_table:
+            data = list(csv.reader(io.StringIO(day_summary_to_csv(summary_per_tags))))
+            return tabulate(data, headers="firstrow")
         case _:
             ...
 
