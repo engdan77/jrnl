@@ -22,6 +22,8 @@ def save_rows():
         if not columns.to_dict().get('title', None):
             logger.info('Skipping empty row')
             continue
+        if columns.starred.value is True and not columns.title.value.endswith('*'):
+            columns.title.value += ' *'
         update_task_by_gui_columns(columns)
         logger.info(f'Saving task: {columns}')
     app.shutdown()
