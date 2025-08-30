@@ -332,7 +332,6 @@ def get_tasks_by_date(date_string: str, task_statuses: Iterable[TaskStatus] = (T
     Return all (associated) tasks with the given date.
     Also ensure that redundant tags are removed.
     """
-    #TODO: check that starred is included
     date = f'{dateparser.parse(date_string).date():%Y-%m-%d}'
     output_tasks = []
     all_tasks = get_all_tasks_as_dict()
