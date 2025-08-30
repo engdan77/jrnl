@@ -557,6 +557,8 @@ def sum_up_by_date(date_string: str, to_date_string: str | None = None, output_f
         logger.info(f"Processing date: {date}")
         tasks = get_tasks_by_date(date)
         summary_per_tags = get_day_summary_by_tasks(tasks)
+        if not summary_per_tags:
+            continue
         summary_per_tags: list[DaySummary] = normalize_time_summaries(summary_per_tags)
         all_summaries.extend(summary_per_tags)
 
