@@ -71,5 +71,5 @@ class TaskStatus(StrEnum):
 
 class TaskOutputFormat(StrEnum):
     json = auto()
-    csv = auto()
+    tsv = auto()
     pretty_table = auto()

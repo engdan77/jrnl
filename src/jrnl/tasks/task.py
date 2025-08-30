@@ -431,7 +431,7 @@ def normalize_time_summaries(summary_per_tags: list[DaySummary],
         task_ids=[],
         starred=False,
         total_time=extra_non_project_duration,
-        tags=['@non-project'],
+        tags=('@non-project',),
     )
 
     current_sum_durations = calc_total_duration(summary_per_tags)
@@ -504,12 +504,23 @@ def day_summary_to_json(day_summaries: list[DaySummary]) -> str:
     return json.dumps(output_list, indent=4)
 
 
-def day_summary_to_csv(day_summaries: list[DaySummary]) -> str:
+def convert_iterable_to_strings(input_data: list[DaySummary], fields=('task_ids', 'tags')) -> list[dict]:
+    output_list = []
+    for item in input_data:
+        for f in fields:
+            new_data = ', '.join(str(_) for _ in item[f])
+            item[f] = new_data
+        output_list.append(item)
+    return output_list
+
+
+def day_summary_to_tsv(day_summaries: list[DaySummary]) -> str:
     rows = day_summary_to_dict(day_summaries)
+    rows_with_converted_fields = convert_iterable_to_strings(rows)
     output_csv = io.StringIO()
-    writer = csv.DictWriter(output_csv, fieldnames=rows[0].keys())
+    writer = csv.DictWriter(output_csv, fieldnames=rows_with_converted_fields[0].keys(), delimiter='\t')
     writer.writeheader()
-    writer.writerows(rows)
+    writer.writerows(rows_with_converted_fields)
     return output_csv.getvalue()
 
 
@@ -567,10 +578,10 @@ def sum_up_by_date(date_string: str, to_date_string: str | None = None, output_f
     match output_format:
         case TaskOutputFormat.json:
             return day_summary_to_json(all_summaries)
-        case TaskOutputFormat.csv:
-             return day_summary_to_csv(all_summaries)
+        case TaskOutputFormat.tsv:
+             return day_summary_to_tsv(all_summaries)
         case TaskOutputFormat.pretty_table:
-            data = list(csv.reader(io.StringIO(day_summary_to_csv(all_summaries))))
+            data = list(csv.reader(io.StringIO(day_summary_to_tsv(all_summaries)), delimiter='\t'))
             return tabulate(data, headers="firstrow")
         case _:
             ...
