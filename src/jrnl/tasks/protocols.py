@@ -54,14 +54,24 @@ class Columns:
 
 
 @dataclasses.dataclass
-class DaySummary(TypedDict):
+class DaySummary:
     date: str
-    tags: list[str]
+    tags: Iterable[str]
     total_time: datetime.timedelta | str
-    task_ids: list[float]
+    task_ids: Iterable[float]
     text_summary: str
     starred: bool
     tags: Iterable[str]
+
+    def to_simpler_dict(self):
+        return {
+            'date': self.date,
+            'tags': ', '.join(self.tags),
+            'total_time': timedelta_to_string(self.total_time),
+            'task_ids': ', '.join(str(_) for _ in self.task_ids),
+            'text_summary': self.text_summary,
+            'starred': self.starred
+        }
 
 
 class TaskStatus(StrEnum):
@@ -70,6 +80,7 @@ class TaskStatus(StrEnum):
 
 
 class TaskOutputFormat(StrEnum):
+    dict = auto()
     json = auto()
     tsv = auto()
     pretty_table = auto()
