@@ -517,16 +517,6 @@ def day_summary_to_json(day_summaries: list[DaySummary]) -> str:
     return json.dumps(output_list, indent=4)
 
 
-def convert_iterable_to_strings_old(input_data: list[DaySummary], fields=('task_ids', 'tags')) -> list[dict]:
-    output_list = []
-    for item in input_data:
-        for f in fields:
-            new_data = ', '.join(str(_) for _ in item[f])
-            item[f] = new_data
-        output_list.append(item)
-    return output_list
-
-
 def day_summary_to_tsv(day_summaries: list[DaySummary]) -> str:
     rows = day_summary_to_dict(day_summaries)
     rows_with_converted_fields = convert_iterable_to_strings(rows)
