@@ -58,14 +58,14 @@ def search_result_to_alfred(result: dict, time_left: bool = False) -> str:
             autocomplete=entry['title'],
         )
         items.append(item)
-        if time_left:
-            time_left_item = AlfredItem(
-                title=f'Total time: {timedelta_to_string(total_duration)}.',
-                subtitle='',
-                arg=0.0,
-                autocomplete=''
-            )
-            items.append(time_left_item)
+    if time_left:
+        time_left_item = AlfredItem(
+            title=f'Total time: {timedelta_to_string(total_duration)}.',
+            subtitle='',
+            arg=0.0,
+            autocomplete=''
+        )
+        items.append(time_left_item)
     return json.dumps({
         'cache': {
             'seconds': 30
