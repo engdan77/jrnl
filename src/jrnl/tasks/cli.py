@@ -1,33 +1,38 @@
+import csv
+import io
 import json
-from typing import Union
 
 import cyclopts
 from loguru import logger
-from enum import StrEnum, auto
+from tabulate import tabulate
 
 import jrnl.tasks.gui
 import jrnl.tasks.sharedmem
 from jrnl.tasks.gui import gui_update_task
 from jrnl.tasks.output import search_result_to_alfred
 from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks_as_dict, \
-    set_status_to_task, get_journal_file_path, sum_up_by_date
-from jrnl.tasks.protocols import TaskStatus, TaskOutputFormat
+    set_status_to_task, get_journal_file_path, sum_up_by_date, tasks_to_tsv
+from jrnl.tasks.protocols import TaskStatus, TaskOutputFormat, EntryOutputFormat
 
 cli_app = cyclopts.App(help="[yellow]Manage tasks in your journal.[/yellow]", help_format='rich')
 
 
-class OutputFormat(StrEnum):
-    json = auto()
-    alfred = auto()
-
-
 @cli_app.command
-def list_tasks() -> list[dict]:
-    """List all tasks in the journal."""
-    tasks = get_all_tasks_as_dict()
-    print(json.dumps(tasks, indent=4))
-    return tasks
-
+def list_tasks(output_format: EntryOutputFormat = EntryOutputFormat.json) -> list[dict]:
+    """List all tasks in the journal in its native format."""
+    result = get_all_tasks_as_dict()
+    match output_format:
+        case EntryOutputFormat.json:
+            print(json.dumps(result, indent=4))
+        case EntryOutputFormat.alfred:
+            print(search_result_to_alfred(result))
+        case EntryOutputFormat.tsv:
+            tsv = tasks_to_tsv(result['entries'])
+            print(tsv)
+        case EntryOutputFormat.pretty_table:
+            tsv = tasks_to_tsv(result['entries'])
+            data = list(csv.reader(io.StringIO(tsv), delimiter='\t'))
+            print(tabulate(data, headers="firstrow"))
 
 @cli_app.command
 def add_task(text: str):
@@ -37,20 +42,20 @@ def add_task(text: str):
 
 
 @cli_app.command
-def search(keywords: list[str], output_format: OutputFormat = OutputFormat.json) -> dict:
+def search(keywords: list[str], output_format: EntryOutputFormat = EntryOutputFormat.json) -> dict:
     """Search for entries in a journal using keywords as AND condition and return the results."""
     result = search_journal(keywords)
     match output_format:
-        case OutputFormat.json:
+        case EntryOutputFormat.json:
             print(json.dumps(result, indent=4))
-        case OutputFormat.alfred:
+        case EntryOutputFormat.alfred:
             print(search_result_to_alfred(result))
     return result
 
 
 @cli_app.command
 def add_duration(taskid: float, duration: str):
-    """Add duration to a task."""
+    """ Add duration to a task."""
     add_duration_to_task(taskid, duration)
     logger.info(f"Duration added to task: {taskid} with duration: {duration}")
 
@@ -66,7 +71,7 @@ def set_status(taskid: float, status: TaskStatus):
 def update_task(taskid: float | None = None):
     """
     Updates a task with the specified task ID. If no task ID is provided, the
-    update will target the default or currently selected task in the system.
+    The update will target the default or currently selected task in the system.
 
     Parameters
     ----------

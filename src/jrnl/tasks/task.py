@@ -508,7 +508,7 @@ def day_summary_to_dict(day_summaries: list[DaySummary]) -> list[dict]:
     return output_list
 
 
-def convert_iterable_to_strings(input_data: list[dict], fields=('task_ids', 'tags')) -> list[dict]:
+def convert_iterable_to_strings(input_data: list[dict] | list[TaskEntryDict], fields=('task_ids', 'tags')) -> list[dict]:
     output_list: list[dict] = []
     for item in input_data:
         new_item = dict(item)
@@ -527,6 +527,15 @@ def day_summary_to_json(day_summaries: list[DaySummary]) -> str:
 def day_summary_to_tsv(day_summaries: list[DaySummary]) -> str:
     rows = day_summary_to_dict(day_summaries)
     rows_with_converted_fields = convert_iterable_to_strings(rows)
+    output_csv = io.StringIO()
+    writer = csv.DictWriter(output_csv, fieldnames=rows_with_converted_fields[0].keys(), delimiter='\t')
+    writer.writeheader()
+    writer.writerows(rows_with_converted_fields)
+    return output_csv.getvalue()
+
+
+def tasks_to_tsv(tasks: list[TaskEntryDict]) -> str:
+    rows_with_converted_fields = convert_iterable_to_strings(tasks)
     output_csv = io.StringIO()
     writer = csv.DictWriter(output_csv, fieldnames=rows_with_converted_fields[0].keys(), delimiter='\t')
     writer.writeheader()

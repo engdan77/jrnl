@@ -84,3 +84,10 @@ class TaskOutputFormat(StrEnum):
     json = auto()
     tsv = auto()
     pretty_table = auto()
+
+
+class EntryOutputFormat(StrEnum):
+    json = auto()
+    tsv = auto()
+    alfred = auto()
+    pretty_table = auto()
