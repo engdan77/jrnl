@@ -3,6 +3,7 @@ import io
 import json
 
 import cyclopts
+import dateparser
 from loguru import logger
 from tabulate import tabulate
 
@@ -18,14 +19,21 @@ cli_app = cyclopts.App(help="[yellow]Manage tasks in your journal.[/yellow]", he
 
 
 @cli_app.command
-def list_tasks(output_format: EntryOutputFormat = EntryOutputFormat.json) -> list[dict]:
+def list_tasks(date: str | None = None, output_format: EntryOutputFormat = EntryOutputFormat.json) -> list[dict]:
     """List all tasks in the journal in its native format."""
     result = get_all_tasks_as_dict()
+    if date:
+        filtered_entries = []
+        parsed_date = dateparser.parse(date).strftime('%Y-%m-%d')
+        for result_entry in result['entries']:
+            if result_entry['date'] == parsed_date:
+                filtered_entries.append(result_entry)
+        result['entries'] = filtered_entries
     match output_format:
         case EntryOutputFormat.json:
             print(json.dumps(result, indent=4))
         case EntryOutputFormat.alfred:
-            print(search_result_to_alfred(result))
+            print(search_result_to_alfred(result, time_left=True))
         case EntryOutputFormat.tsv:
             tsv = tasks_to_tsv(result['entries'])
             print(tsv)
@@ -36,7 +44,7 @@ def list_tasks(output_format: EntryOutputFormat = EntryOutputFormat.json) -> lis
 
 @cli_app.command
 def add_task(text: str):
-    """Add a task to the journal."""
+    """ Add a task to the journal."""
     logger.info(f"Adding task: {text}")
     add_task_to_journal(text)
 

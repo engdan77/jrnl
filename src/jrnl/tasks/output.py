@@ -1,7 +1,9 @@
 import dataclasses
+import datetime
 import json
 
-from jrnl.tasks.task import get_task_id
+from jrnl.tasks.task import get_task_id, get_duration
+from jrnl.tasks.time import timedelta_to_string
 
 
 # Example Alfred JSON output
@@ -35,9 +37,10 @@ class AlfredItem:
         return dataclasses.asdict(self)
 
 
-def search_result_to_alfred(result: dict) -> str:
+def search_result_to_alfred(result: dict, time_left: bool = False) -> str:
     """This is the format that macOS Alfred JSON expects as output based on search results."""
     items = []
+    total_duration = datetime.timedelta()
     for entry in result['entries']:
         task_id = get_task_id(entry['title'])
         entry['title'] = (
@@ -45,13 +48,24 @@ def search_result_to_alfred(result: dict) -> str:
         )
         show_tags = entry.get('tags', [])
         show_tags.remove('@task')
+        duration = get_duration(entry)
+        total_duration += duration
+        duration_str = timedelta_to_string(duration)
         item = AlfredItem(
-            title=f'{entry["date"]} {' '.join(show_tags)}',
+            title=f'{entry["date"]} {' '.join(show_tags)} {x if (x := duration_str) else ''}'.strip(),
             subtitle=entry['title'],
             arg=task_id,
             autocomplete=entry['title'],
         )
         items.append(item)
+        if time_left:
+            time_left_item = AlfredItem(
+                title=f'Total time: {timedelta_to_string(total_duration)}.',
+                subtitle='',
+                arg=0.0,
+                autocomplete=''
+            )
+            items.append(time_left_item)
     return json.dumps({
         'cache': {
             'seconds': 30
