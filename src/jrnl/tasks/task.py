@@ -439,14 +439,21 @@ def normalize_time_summaries(
     current_sum_durations = calc_total_duration(summary_per_tags)
     least_hours_required = working_hours_per_day - extra_non_project_duration
 
-    if least_hours_required < current_sum_durations < working_hours_per_day:
+    # Adds a non-project task if the total time of all tasks is less than working hours per day, adding little extra non-project time. Or adding to a current non-project task if such exists.
+    if least_hours_required <= current_sum_durations < working_hours_per_day:
         logger.info("Total time of all tasks is less than working hours per day, adding little extra non-project time.")
         non_project.total_time = working_hours_per_day - current_sum_durations
-        summary_per_tags.append(non_project)
+        if found_non_project := [s for s in summary_per_tags if '@non-project' in s.tags]:
+            found_non_project[0].total_time += non_project.total_time
+        else:
+            summary_per_tags.append(non_project)
         return summary_per_tags
     elif current_sum_durations < least_hours_required:
         summary_per_tags = increase_times(summary_per_tags, least_hours_required)
-        summary_per_tags.append(non_project)
+        if found_non_project := [s for s in summary_per_tags if '@non-project' in s.tags]:
+            found_non_project[0].total_time += non_project.total_time
+        else:
+            summary_per_tags.append(non_project)
         logger.info(f"New total time: {calc_total_duration(summary_per_tags)}")
         return summary_per_tags
     elif current_sum_durations > working_hours_per_day:
