@@ -120,11 +120,13 @@ def journal_file():
 
 
 @cli_app.command
-def stats():
+def stats(from_date: str = 'Monday', to_date: str = 'Today'):
+    """Displays statistics for the period."""
     gui_display_stats('2025-08-26', '2025-08-31')
 
 
 def clear_cache():
+    """Clears the cache for such as LLM summarization."""
     logger.info('Clearing cache')
     make_task_bullets_simpler.cache_clear()
 
