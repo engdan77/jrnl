@@ -1,21 +1,41 @@
 import random
+from pathlib import Path
+
+import matplotlib
 import matplotlib.pyplot as plt
 from importlib.resources import files
 import matplotlib.font_manager as fm
+from matplotlib import patheffects
 
+matplotlib.set_loglevel("critical")
 
-font_resource = files(__package__) / 'hand.ttf'
-
-font_path = font_resource.name  # the location of the font file
+font_resource: Path = files(__package__) / 'hand.ttf'
+font_path = font_resource.as_posix()
 my_font = fm.FontProperties(fname=font_path)
 
 random_color = lambda: '#' + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
 
 
-def plot_stacked_bar(categories, series, labels=None, colors=None, title='Simple Stacked Bar Chart', x_label='Category', y_label='Value'):
+def plot_stacked_bar(categories,
+                     series,
+                     labels=None,
+                     colors=None,
+                     title='Simple Stacked Bar Chart',
+                     x_label='Category',
+                     y_label='Value',
+                     dark_mode=False,
+                     display=False,
+                     input_fig=None):
     # series: list of lists, each inner list is a series for the categories
     with plt.xkcd():
+        if dark_mode:
+            plt.style.use(['dark_background'])
+            plt.rcParams['path.effects'] = [patheffects.withStroke(linewidth=0)]
+            plt.rcParams['figure.facecolor'] = 'black'
         fig, ax = plt.subplots(figsize=(6, 4))
+        if input_fig:
+            fig = input_fig
+            ax = fig.gca()
         bottoms = [0] * len(categories)
 
         if labels is None:
@@ -45,7 +65,8 @@ def plot_stacked_bar(categories, series, labels=None, colors=None, title='Simple
             label.set_fontproperties(my_font)
         ax.legend(prop=my_font)
         plt.tight_layout()
-        plt.show()
+        if display:
+            plt.show()
 
 
 def plot_pie(
@@ -58,6 +79,7 @@ def plot_pie(
     explode=None,
     donut=False,
     legend=True,
+    display=False
 ):
     """
     Plot a pie (or donut) chart.
@@ -137,7 +159,8 @@ def plot_pie(
 
         ax.set_aspect("equal")  # keep it circular
         plt.tight_layout()
-        plt.show()
+        if display:
+            plt.show()
 
 
 def example_stacked_chart():
@@ -155,7 +178,8 @@ def example_pie_chart():
     plot_pie(
         labels,
         values=[1, 2, 3, 4],
-        title='Simple Pie Chart'
+        title='Simple Pie Chart',
+        display=True
     )
 
 
