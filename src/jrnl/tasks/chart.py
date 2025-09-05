@@ -13,6 +13,7 @@ font_resource: Path = files(__package__) / 'hand.ttf'
 font_path = font_resource.as_posix()
 my_font = fm.FontProperties(fname=font_path)
 
+random.seed(42)  # Get more concistent colors
 random_color = lambda: '#' + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
 
 
