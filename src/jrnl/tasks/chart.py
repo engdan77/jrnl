@@ -79,6 +79,8 @@ def plot_pie(
     explode=None,
     donut=False,
     legend=True,
+    input_fig=None,
+    dark_mode=False,
     display=False
 ):
     """
@@ -105,7 +107,14 @@ def plot_pie(
         explode = [0.0] * len(values)
 
     with plt.xkcd():
+        if dark_mode:
+            plt.style.use(['dark_background'])
+            plt.rcParams['path.effects'] = [patheffects.withStroke(linewidth=0)]
+            plt.rcParams['figure.facecolor'] = 'black'
         fig, ax = plt.subplots(figsize=(6, 4))
+        if input_fig:
+            fig = input_fig
+        ax = fig.gca()
 
         wedges, texts, autotexts = ax.pie(
             values,

@@ -114,8 +114,9 @@ def gui_update_task(taskid: float | str | None = None):
     ui.run(native=True, reload=False, window_size=(1280, 720), title=TITLE)
 
 
-def gui_display_stats(from_date: str, to_date: str):
-    ui.dark_mode().enable()
+def gui_display_stats(from_date: str, to_date: str, dark_theme=False):
+    if dark_theme:
+        ui.dark_mode().enable()
     day_summaries = sum_up_by_date(from_date, to_date, simplify_texts=True, output_format=TaskOutputFormat.dict)
     with ui.matplotlib(figsize=(9, 6)).figure as fig:
         categories = ['A', 'B', 'C', 'D']
@@ -124,6 +125,14 @@ def gui_display_stats(from_date: str, to_date: str):
             series=[[1, 2, 3, 4], [5, 6, 7, 8], [2, 2, 2, 2], [6, 6, 6, 6]],
             labels=['Series A', 'Series B', 'Series C', 'Series D'],
             title='Simple Stacked Bar Chart',
+            input_fig=fig
+        )
+    with ui.matplotlib(figsize=(9, 6)).figure as fig:
+        labels = ['A', 'B', 'C', 'D']
+        plot_pie(
+            labels,
+            values=[1, 2, 3, 4],
+            title='Simple Pie Chart',
             input_fig=fig
         )
     day_summaries_to_table(day_summaries)
