@@ -61,13 +61,12 @@ class DaySummary:
     task_ids: Iterable[float]
     text_summary: str
     starred: bool
-    tags: Iterable[str]
 
     def to_simpler_dict(self):
         return {
             'date': self.date,
             'tags': ', '.join(self.tags),
-            'total_time': timedelta_to_string(self.total_time),
+            'total_time': timedelta_to_string(self.total_time) if isinstance(self.total_time, datetime.timedelta) else self.total_time,
             'task_ids': ', '.join(str(_) for _ in self.task_ids),
             'text_summary': self.text_summary,
             'starred': self.starred

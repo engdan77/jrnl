@@ -10,6 +10,7 @@ from tabulate import tabulate
 import jrnl.tasks.gui
 import jrnl.tasks.sharedmem
 from jrnl.tasks.gui import gui_update_task, gui_display_stats
+from jrnl.tasks.llm import make_task_bullets_simpler
 from jrnl.tasks.output import search_result_to_alfred
 from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks_as_dict, \
     set_status_to_task, get_journal_file_path, sum_up_by_date, tasks_to_tsv
@@ -120,7 +121,12 @@ def journal_file():
 
 @cli_app.command
 def stats():
-    gui_display_stats('2025-09-01', '2025-09-04')
+    gui_display_stats('2025-08-26', '2025-08-31')
+
+
+def clear_cache():
+    logger.info('Clearing cache')
+    make_task_bullets_simpler.cache_clear()
 
 
 def main():

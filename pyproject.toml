@@ -27,6 +27,8 @@ dependencies = [
     "ollama>=0.5.3",
     "pandas>=2.3.2",
     "parsedatetime==2.6",
+    "persist-cache>=0.4.4",
+    "platformdirs>=4.4.0",
     "pycparser==2.22",
     "pygments==2.19.2",
     "python-dateutil==2.9.0.post0",

@@ -5,6 +5,9 @@ from ollama import ChatResponse, chat, ResponseError
 from string import Template
 from loguru import logger
 import rich
+from persist_cache import cache
+
+from jrnl.tasks.dirs import CACHE_DIR
 
 SIMPLIFY_TASKS_PROMPT = Template("""Make a one line summary of the below tasks completed:
 $tasks_in_bullet_form
@@ -14,11 +17,13 @@ MODEL: Final = 'gemma:7b'
 
 console = rich.console.Console()
 
+
 def pull_model():
     with console.status("Initial status") as status:
         ollama.pull(MODEL)
 
 
+@cache(dir=CACHE_DIR)
 def make_task_bullets_simpler(tasks: str) -> str:
     content = SIMPLIFY_TASKS_PROMPT.substitute(tasks_in_bullet_form=tasks)
 

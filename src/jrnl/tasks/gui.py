@@ -11,7 +11,7 @@ from jrnl.tasks.table import day_summaries_to_table
 from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, get_task_status, \
     get_duration, update_task_by_gui_columns, get_all_tasks, get_next_taskid, sum_up_by_date
 from jrnl.tasks.time import timedelta_to_string
-from jrnl.tasks.protocols import Columns, TaskStatus
+from jrnl.tasks.protocols import Columns, TaskStatus, TaskOutputFormat
 
 rows = []
 
@@ -111,6 +111,7 @@ def gui_update_task(taskid: float | str | None = None):
 
 
 def gui_display_stats(from_date: str, to_date: str):
-    day_summaries = sum_up_by_date(from_date, to_date, simplify_texts=True)
+    day_summaries = sum_up_by_date(from_date, to_date, simplify_texts=True, output_format=TaskOutputFormat.dict)
     table = day_summaries_to_table(day_summaries)
+    ui.dark_mode().enable()
     ui.run(native=True, reload=False, window_size=(1280, 720))
