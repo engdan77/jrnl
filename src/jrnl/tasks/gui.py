@@ -110,6 +110,7 @@ def gui_update_task(taskid: float | str | None = None):
     ui.run(native=True, reload=False, window_size=(1280, 720))
 
 
-def gui_display_stats(from_date: datetime.date, to_date: datetime.date):
+def gui_display_stats(from_date: str, to_date: str):
     day_summaries = sum_up_by_date(from_date, to_date, simplify_texts=True)
     table = day_summaries_to_table(day_summaries)
+    ui.run(native=True, reload=False, window_size=(1280, 720))
