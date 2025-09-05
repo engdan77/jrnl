@@ -117,7 +117,6 @@ def gui_update_task(taskid: float | str | None = None):
 def gui_display_stats(from_date: str, to_date: str):
     ui.dark_mode().enable()
     day_summaries = sum_up_by_date(from_date, to_date, simplify_texts=True, output_format=TaskOutputFormat.dict)
-    table = day_summaries_to_table(day_summaries)
     with ui.matplotlib(figsize=(9, 6)).figure as fig:
         categories = ['A', 'B', 'C', 'D']
         plot_stacked_bar(
@@ -127,4 +126,5 @@ def gui_display_stats(from_date: str, to_date: str):
             title='Simple Stacked Bar Chart',
             input_fig=fig
         )
+    day_summaries_to_table(day_summaries)
     ui.run(native=True, reload=False, window_size=(1280, 720), title=TITLE)

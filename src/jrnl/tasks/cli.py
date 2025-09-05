@@ -122,9 +122,10 @@ def journal_file():
 @cli_app.command
 def stats(from_date: str = 'Monday', to_date: str = 'Today'):
     """Displays statistics for the period."""
-    gui_display_stats('2025-08-26', '2025-08-31')
+    gui_display_stats(from_date, to_date)
 
 
+@cli_app.command
 def clear_cache():
     """Clears the cache for such as LLM summarization."""
     logger.info('Clearing cache')
@@ -138,5 +139,5 @@ def main():
     logger.info('Exiting JRNL')
 
 
-if __name__ in {"__main__", "__mp_main__"}:
+if __name__ == "__main__":
     main()
