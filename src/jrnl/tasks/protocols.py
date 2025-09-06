@@ -73,6 +73,15 @@ class DaySummary:
         }
 
 
+class DaySummaryDict(TypedDict):
+    date: str
+    tags: list[str]
+    total_time: str
+    task_ids: list[float]
+    text_summary: str
+    starred: bool
+
+
 class TaskStatus(StrEnum):
     todo = auto()
     completed = auto()

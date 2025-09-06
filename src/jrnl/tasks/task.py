@@ -2,19 +2,20 @@ import csv
 import datetime
 import functools
 import io
+import itertools
 import json
 import operator
 import re
 from loguru import logger
 from collections import defaultdict
-from typing import TYPE_CHECKING, Union, Final, Iterable, Generator, Any
+from typing import TYPE_CHECKING, Union, Final, Iterable, Generator, Any, Annotated
 from tabulate import tabulate
 
 import dateparser
 
 from jrnl.tasks.llm import make_task_bullets_simpler
-from jrnl.tasks.protocols import Columns, TaskStatus, TaskEntryDict, DaySummary, TaskOutputFormat
-from jrnl.tasks.time import string_to_timedelta, timedelta_to_string
+from jrnl.tasks.protocols import Columns, TaskStatus, TaskEntryDict, DaySummary, TaskOutputFormat, DaySummaryDict
+from jrnl.tasks.time import string_to_timedelta, timedelta_to_string, timedelta_to_hours
 
 if TYPE_CHECKING:
     pass
@@ -555,6 +556,23 @@ def get_date_range(from_date: str, to_date: str) -> Generator[str]:
     to_date_dt = dateparser.parse(to_date)
     for n in range(int((to_date_dt - from_date_dt).days) + 1):
         yield f'{from_date_dt + datetime.timedelta(days=n):%Y-%m-%d}'
+
+
+def day_summary_to_bar_chart_data(day_summaries: list[DaySummaryDict]) -> tuple[Annotated[list, 'x_axis'], Annotated[list[list], 'series'], Annotated[list, 'labels']]:
+    summary = defaultdict(dict)
+    for s in day_summaries:
+        tag = s['tags']
+        summary[s['date']][tag] = string_to_timedelta(s['total_time'])
+    x_axis = list(sorted(summary.keys()))
+    labels = sorted(list(set(itertools.chain.from_iterable([day.keys() for day in summary.values()]))))
+    series = []
+    for tag in labels:
+        day_series = []
+        for day in x_axis:
+            day_series.append(timedelta_to_hours(summary[day].get(tag, datetime.timedelta())))
+        series.append(day_series)
+    labels = [f','.join(l).replace('@', '') for l in labels]
+    return x_axis, series, labels
 
 
 def sum_up_by_date(date_string: str, to_date_string: str | None = None, output_format: TaskOutputFormat = TaskOutputFormat.json, simplify_texts: bool = False) -> Any:

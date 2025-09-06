@@ -11,9 +11,10 @@ from jrnl.tasks.chart import plot_pie, plot_stacked_bar
 from jrnl.tasks.sharedmem import set_shared, get_shared, create_shared, close_shared
 from jrnl.tasks.table import day_summaries_to_table
 from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, get_task_status, \
-    get_duration, update_task_by_gui_columns, get_all_tasks, get_next_taskid, sum_up_by_date
+    get_duration, update_task_by_gui_columns, get_all_tasks, get_next_taskid, sum_up_by_date, \
+    day_summary_to_bar_chart_data
 from jrnl.tasks.time import timedelta_to_string
-from jrnl.tasks.protocols import Columns, TaskStatus, TaskOutputFormat
+from jrnl.tasks.protocols import Columns, TaskStatus, TaskOutputFormat, DaySummaryDict
 
 TITLE = '📔 Task Journal ✅'
 
@@ -117,13 +118,14 @@ def gui_update_task(taskid: float | str | None = None):
 def gui_display_stats(from_date: str, to_date: str, dark_theme=False):
     if dark_theme:
         ui.dark_mode().enable()
-    day_summaries = sum_up_by_date(from_date, to_date, simplify_texts=True, output_format=TaskOutputFormat.dict)
+    day_summaries: list [DaySummaryDict] = sum_up_by_date(from_date, to_date, simplify_texts=True, output_format=TaskOutputFormat.dict)
+    x_axis, series, labels = day_summary_to_bar_chart_data(day_summaries)
     with ui.matplotlib(figsize=(9, 6)).figure as fig:
-        categories = ['A', 'B', 'C', 'D']
+        categories = x_axis
         plot_stacked_bar(
             categories,
-            series=[[1, 2, 3, 4], [5, 6, 7, 8], [2, 2, 2, 2], [6, 6, 6, 6]],
-            labels=['Series A', 'Series B', 'Series C', 'Series D'],
+            series=series,
+            labels=labels,
             title='Simple Stacked Bar Chart',
             input_fig=fig
         )
