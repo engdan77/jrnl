@@ -120,14 +120,15 @@ def gui_display_stats(from_date: str, to_date: str, dark_theme=False):
         ui.dark_mode().enable()
     day_summaries: list [DaySummaryDict] = sum_up_by_date(from_date, to_date, simplify_texts=True, output_format=TaskOutputFormat.dict)
     x_axis, series, labels = day_summary_to_bar_chart_data(day_summaries)
-    with ui.matplotlib(figsize=(9, 6)).figure as fig:
+    with ui.matplotlib(figsize=(16, 6)).figure as fig:
         categories = x_axis
         plot_stacked_bar(
             categories,
             series=series,
             labels=labels,
-            title='Simple Stacked Bar Chart',
-            input_fig=fig
+            title='Arbete och tid',
+            y_label='Timmar',
+            input_fig=fig,
         )
     with ui.matplotlib(figsize=(9, 6)).figure as fig:
         labels = ['A', 'B', 'C', 'D']

@@ -22,27 +22,21 @@ def plot_stacked_bar(categories,
                      labels=None,
                      colors=None,
                      title='Simple Stacked Bar Chart',
-                     x_label='Category',
                      y_label='Value',
                      dark_mode=False,
                      display=False,
                      input_fig=None):
-    # series: list of lists, each inner list is a series for the categories
     with plt.xkcd():
         if dark_mode:
             plt.style.use(['dark_background'])
             plt.rcParams['path.effects'] = [patheffects.withStroke(linewidth=0)]
             plt.rcParams['figure.facecolor'] = 'black'
-        fig, ax = plt.subplots(figsize=(6, 4))
+        fig, ax = plt.subplots()
         if input_fig:
             fig = input_fig
             ax = fig.gca()
         bottoms = [0] * len(categories)
 
-        if labels is None:
-            labels = [f'Series {i + 1}' for i in range(len(series))]
-
-        # Default colors if none provided (will cycle if more series)
         default_colors = [random_color() for _ in range(len(series))] + []
         if colors is None:
             colors = default_colors
@@ -58,14 +52,13 @@ def plot_stacked_bar(categories,
             bottoms = [b + v for b, v in zip(bottoms, s)]
 
         ax.set_title(title, fontproperties=my_font)
-        ax.set_xlabel(x_label, fontproperties=my_font)
         ax.set_ylabel(y_label, fontproperties=my_font)
         for label in ax.get_xticklabels():
             label.set_fontproperties(my_font)
+            label.set_rotation(35)
         for label in ax.get_yticklabels():
             label.set_fontproperties(my_font)
         ax.legend(prop=my_font)
-        plt.tight_layout()
         if display:
             plt.show()
 
@@ -194,4 +187,4 @@ def example_pie_chart():
 
 
 if __name__ == '__main__':
-    example_pie_chart()
+    example_stacked_chart()
