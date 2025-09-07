@@ -132,11 +132,11 @@ def gui_display_stats(from_date: str, to_date: str, dark_theme=False):
             input_fig=fig,
         )
     with ui.matplotlib(figsize=(9, 6)).figure as fig:
-        labels = [f'{_} [{duration_per_tags[_]}h]' for _ in duration_per_tags.keys()]
+        labels = [f'{_} [{duration_per_tags[_]:g}h]' for _ in duration_per_tags.keys()]
         plot_pie(
             labels,
             values=duration_per_tags.values(),
-            title=f'Tid per projekt [total {duration_per_tags.total()}h]',
+            title=f'Tid per projekt [total {duration_per_tags.total():g}h]',
             input_fig=fig
         )
     day_summaries_to_table(day_summaries)
