@@ -12,7 +12,7 @@ from jrnl.tasks.sharedmem import set_shared, get_shared, create_shared, close_sh
 from jrnl.tasks.table import day_summaries_to_table
 from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, get_task_status, \
     get_duration, update_task_by_gui_columns, get_all_tasks, get_next_taskid, sum_up_by_date, \
-    day_summary_to_bar_chart_data
+    day_summary_to_bar_chart_data, day_summary_per_tags
 from jrnl.tasks.time import timedelta_to_string
 from jrnl.tasks.protocols import Columns, TaskStatus, TaskOutputFormat, DaySummaryDict
 
@@ -119,6 +119,7 @@ def gui_display_stats(from_date: str, to_date: str, dark_theme=False):
     if dark_theme:
         ui.dark_mode().enable()
     day_summaries: list [DaySummaryDict] = sum_up_by_date(from_date, to_date, simplify_texts=True, output_format=TaskOutputFormat.dict)
+    duration_per_tags = day_summary_per_tags(day_summaries)
     x_axis, series, labels = day_summary_to_bar_chart_data(day_summaries)
     with ui.matplotlib(figsize=(16, 6)).figure as fig:
         categories = x_axis
@@ -126,16 +127,16 @@ def gui_display_stats(from_date: str, to_date: str, dark_theme=False):
             categories,
             series=series,
             labels=labels,
-            title='Arbete och tid',
+            title='Projekt och tid',
             y_label='Timmar',
             input_fig=fig,
         )
     with ui.matplotlib(figsize=(9, 6)).figure as fig:
-        labels = ['A', 'B', 'C', 'D']
+        labels = [f'{_} [{duration_per_tags[_]}h]' for _ in duration_per_tags.keys()]
         plot_pie(
             labels,
-            values=[1, 2, 3, 4],
-            title='Simple Pie Chart',
+            values=duration_per_tags.values(),
+            title=f'Tid per projekt [total {duration_per_tags.total()}h]',
             input_fig=fig
         )
     day_summaries_to_table(day_summaries)

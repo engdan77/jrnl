@@ -7,7 +7,7 @@ import json
 import operator
 import re
 from loguru import logger
-from collections import defaultdict
+from collections import defaultdict, Counter
 from typing import TYPE_CHECKING, Union, Final, Iterable, Generator, Any, Annotated
 from tabulate import tabulate
 
@@ -573,6 +573,14 @@ def day_summary_to_bar_chart_data(day_summaries: list[DaySummaryDict]) -> tuple[
         series.append(day_series)
     labels = [f','.join(l).replace('@', '') for l in labels]
     return x_axis, series, labels
+
+
+def day_summary_per_tags(day_summaries: list [DaySummaryDict]) -> Counter:
+    c = Counter()
+    for s in day_summaries:
+        tags = ','.join(sorted(s['tags'])).replace('@', '') or 'unknown'
+        c[tags] += string_to_timedelta(s['total_time']).seconds / 3600
+    return c
 
 
 def sum_up_by_date(date_string: str, to_date_string: str | None = None, output_format: TaskOutputFormat = TaskOutputFormat.json, simplify_texts: bool = False) -> Any:
