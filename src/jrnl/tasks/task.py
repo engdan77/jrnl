@@ -598,6 +598,7 @@ def truncate_tasks_to_monthly(daily_tasks: list[TasksSummary]) -> list[TasksSumm
         all_texts = '\n'.join(t.text_summary for t in tasks_)
         starred = any(t.starred for t in tasks_)
         task_ids = list(itertools.chain.from_iterable([t.task_ids for t in tasks_]))
+        tags = list(set(itertools.chain.from_iterable(t.tags for t in tasks_)))
         output_tasks.append(
             TasksSummary(
                 date=year_month,
@@ -605,7 +606,7 @@ def truncate_tasks_to_monthly(daily_tasks: list[TasksSummary]) -> list[TasksSumm
                 task_ids=task_ids,
                 starred=starred,
                 total_time=monthly_duration,
-                tags=('@monthly',),
+                tags=tags,
             )
         )
     return output_tasks
