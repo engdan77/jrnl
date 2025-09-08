@@ -6,6 +6,8 @@ import itertools
 import json
 import operator
 import re
+from unittest import case
+
 from loguru import logger
 from collections import defaultdict, Counter
 from typing import TYPE_CHECKING, Union, Final, Iterable, Generator, Any, Annotated
@@ -14,7 +16,8 @@ from tabulate import tabulate
 import dateparser
 
 from jrnl.tasks.llm import make_task_bullets_simpler
-from jrnl.tasks.protocols import Columns, TaskStatus, TaskEntryDict, DaySummary, TaskOutputFormat, DaySummaryDict
+from jrnl.tasks.protocols import Columns, TaskStatus, TaskEntryDict, TasksSummary, TaskOutputFormat, DaySummaryDict, \
+    Period
 from jrnl.tasks.time import string_to_timedelta, timedelta_to_string, timedelta_to_hours
 
 if TYPE_CHECKING:
@@ -372,8 +375,8 @@ def get_title_of_parent_task(task_id: float) -> str:
     return parent_task['title'] if isinstance(parent_task, dict) else parent_task.title
 
 
-def get_day_summary_by_tasks(input_tasks: list[TaskEntryDict]) -> list[DaySummary]:
-    summary_per_tags: list[DaySummary] = []
+def get_day_summary_by_tasks(input_tasks: list[TaskEntryDict]) -> list[TasksSummary]:
+    summary_per_tags: list[TasksSummary] = []
     tasks_grouped_by_tags = get_tasks_grouped_by_tags(input_tasks)
     for tags, tasks in tasks_grouped_by_tags.items():
         date = tasks[0]['date']
@@ -393,7 +396,7 @@ def get_day_summary_by_tasks(input_tasks: list[TaskEntryDict]) -> list[DaySummar
             parent_task_title = get_title_of_parent_task(task_id)
             task_text = concat_title_body(task_title, task_body, extra=parent_task_title)
             text_summary_list.append(task_text)
-        day_summary = DaySummary(
+        day_summary = TasksSummary(
             date=date,
             text_summary='\n'.join(text_summary_list),
             task_ids=task_ids,
@@ -406,11 +409,11 @@ def get_day_summary_by_tasks(input_tasks: list[TaskEntryDict]) -> list[DaySummar
 
 
 # Python
-def calc_total_duration(summaries: list[DaySummary]) -> datetime.timedelta:
+def calc_total_duration(summaries: list[TasksSummary]) -> datetime.timedelta:
     return functools.reduce(operator.add, [s.total_time for s in summaries], datetime.timedelta())
 
 
-def adjust_time(s: list[DaySummary], steps_minutes: int = 15) -> list[DaySummary]:
+def adjust_time(s: list[TasksSummary], steps_minutes: int = 15) -> list[TasksSummary]:
     td = datetime.timedelta
     for item in s:
         current_time = item.total_time.total_seconds()
@@ -420,15 +423,15 @@ def adjust_time(s: list[DaySummary], steps_minutes: int = 15) -> list[DaySummary
 
 
 def normalize_time_summaries(
-    summary_per_tags: list[DaySummary],
+    summary_per_tags: list[TasksSummary],
     extra_non_project_duration: datetime.timedelta = datetime.timedelta(hours=1),
     working_hours_per_day: datetime.timedelta = datetime.timedelta(hours=8),
-) -> list[DaySummary]:
+) -> list[TasksSummary]:
     """Align the timespan of each summary to the longest one."""
     assert len(summary_per_tags) > 0, "No tasks found, nothing to normalize."
     current_date = summary_per_tags[0].date
 
-    non_project = DaySummary(
+    non_project = TasksSummary(
         date=current_date,
         text_summary='- Non-project task',
         task_ids=[],
@@ -464,7 +467,7 @@ def normalize_time_summaries(
     return summary_per_tags
 
 
-def increase_times(summaries: list[DaySummary], least_hours_required: datetime.timedelta) -> list[DaySummary]:
+def increase_times(summaries: list[TasksSummary], least_hours_required: datetime.timedelta) -> list[TasksSummary]:
     logger.info("Adjusting time a notch to align into reasonable margins evenly")
     org_duration = calc_total_duration(summaries)
     if not org_duration:
@@ -480,7 +483,7 @@ def increase_times(summaries: list[DaySummary], least_hours_required: datetime.t
     return summaries
 
 
-def decrease_times(summaries: list[DaySummary], working_hours_per_day: datetime.timedelta) -> list[DaySummary]:
+def decrease_times(summaries: list[TasksSummary], working_hours_per_day: datetime.timedelta) -> list[TasksSummary]:
     logger.info("Adjusting time a notch to align into reasonable margins evenly")
     org_duration = calc_total_duration(summaries)
     while calc_total_duration(summaries) > working_hours_per_day:
@@ -493,7 +496,7 @@ def decrease_times(summaries: list[DaySummary], working_hours_per_day: datetime.
     return summaries
 
 
-def day_summary_to_dict(day_summaries: list[DaySummary]) -> list[dict]:
+def day_summary_to_dict(day_summaries: list[TasksSummary]) -> list[dict]:
     output_list: list[dict] = []
     for d in day_summaries:
         output_list.append(
@@ -520,12 +523,12 @@ def convert_iterable_to_strings(input_data: list[dict] | list[TaskEntryDict], fi
     return output_list
 
 
-def day_summary_to_json(day_summaries: list[DaySummary]) -> str:
+def day_summary_to_json(day_summaries: list[TasksSummary]) -> str:
     output_list = day_summary_to_dict(day_summaries)
     return json.dumps(output_list, indent=4)
 
 
-def day_summary_to_tsv(day_summaries: list[DaySummary]) -> str:
+def day_summary_to_tsv(day_summaries: list[TasksSummary]) -> str:
     rows = day_summary_to_dict(day_summaries)
     rows_with_converted_fields = convert_iterable_to_strings(rows)
     output_csv = io.StringIO()
@@ -544,7 +547,7 @@ def tasks_to_tsv(tasks: list[TaskEntryDict]) -> str:
     return output_csv.getvalue()
 
 
-def make_tasks_text_simpler(summaries: list[DaySummary]) -> list[DaySummary]:
+def make_tasks_text_simpler(summaries: list[TasksSummary]) -> list[TasksSummary]:
     for idx, summary in enumerate(summaries):
         logger.info(f"Making summary {idx + 1}/{len(summaries)} simpler")
         summary.text_summary = make_task_bullets_simpler(summary.text_summary)
@@ -583,29 +586,75 @@ def day_summary_per_tags(day_summaries: list [DaySummaryDict]) -> Counter:
     return c
 
 
-def sum_up_by_date(date_string: str, to_date_string: str | None = None, output_format: TaskOutputFormat = TaskOutputFormat.json, simplify_texts: bool = False) -> Any:
-    """
-    Summarizes tasks by date or a range of dates and formats the output based on the specified
-    format.
+def truncate_tasks_to_monthly(daily_tasks: list[TasksSummary]) -> list[TasksSummary]:
+    output_tasks: list[TasksSummary] = []
+    monthly_tasks: dict[str, list[TasksSummary]] = defaultdict(list)
+    for task in daily_tasks:
+        dt = datetime.datetime.strptime(task.date, '%Y-%m-%d')
+        year_month = dt.strftime('%Y-%m')
+        monthly_tasks[year_month].append(task)
+    for year_month, tasks_ in monthly_tasks.items():
+        monthly_duration = calc_total_duration(tasks_)
+        all_texts = '\n'.join(t.text_summary for t in tasks_)
+        starred = any(t.starred for t in tasks_)
+        task_ids = list(itertools.chain.from_iterable([t.task_ids for t in tasks_]))
+        output_tasks.append(
+            TasksSummary(
+                date=year_month,
+                text_summary=all_texts,
+                task_ids=task_ids,
+                starred=starred,
+                total_time=monthly_duration,
+                tags=('@monthly',),
+            )
+        )
+    return output_tasks
 
-    Args:
-        date_string (str): The starting date for processing in the format "YYYY-MM-DD".
-        to_date_string (str | None): The optional end date for the range, in the format "YYYY-MM-DD".
-            If not provided, only the date specified in "date_string" is processed.
-        output_format (TaskOutputFormat): Specifies how the summarized data should be formatted.
-            Possible formats are JSON, CSV, or Pretty Table.
-        simplify_texts (bool): If True, simplifies the descriptions of the summaries.
+
+def truncate_tasks(tasks: list[TasksSummary], by: Period) -> list[TasksSummary]:
+    """Truncate the task summary by period."""
+    assert by is not Period.day, "Cannot truncate by day, use `sum_up_by_date` instead."
+    output_tasks: list[TasksSummary] = []
+    monthly_tasks = truncate_tasks_to_monthly(tasks)
+    match by:
+        case Period.month:
+            output_tasks = monthly_tasks
+        case _:
+            raise ValueError(f"Unsupported period: {by}")
+    return output_tasks
+
+
+def get_summed_up_tasks(date_string: str,
+                        to_date_string: str | None = None,
+                        output_format: TaskOutputFormat = TaskOutputFormat.json,
+                        simplify_texts: bool = False,
+                        by_period: Period = Period.day) -> Any:
+    """
+    Processes and summarizes tasks grouped by date. Provides output in various formats
+    such as JSON, dictionary, TSV, or a formatted table. The function supports processing
+    a range of dates and has an option to simplify the texts in the summaries.
+
+    Parameters:
+        date_string (str): The starting date string in the range of tasks to process.
+        to_date_string (str | None, optional): The ending date string in the range; if None,
+            only the `date_string` is processed. Default is None.
+        output_format (TaskOutputFormat): Specifies the format of the output. Can be JSON,
+            dictionary, TSV, or a formatted table.
+        simplify_texts (bool): Whether to simplify the text in the summaries. Default is False.
+        by_period (Period): The granularity of how tasks are summarized, such as daily. Default is Period.day.
 
     Returns:
-        str: The task summaries formatted as a JSON string, CSV format, or a table-like string,
-        depending on the selected output format.
+        Any: The summarized task information in the specified output format.
+
+    Raises:
+        No exceptions are specified for this function.
     """
     if to_date_string:
         dates = get_date_range(date_string, to_date_string)
     else:
         dates = [date_string]
 
-    all_summaries: list[DaySummary] = []
+    all_summaries: list[TasksSummary] = []
 
     date: str
     for date in dates:
@@ -614,8 +663,11 @@ def sum_up_by_date(date_string: str, to_date_string: str | None = None, output_f
         summary_per_tags = get_day_summary_by_tasks(tasks)
         if not summary_per_tags:
             continue
-        summary_per_tags: list[DaySummary] = normalize_time_summaries(summary_per_tags)
+        summary_per_tags: list[TasksSummary] = normalize_time_summaries(summary_per_tags)
         all_summaries.extend(summary_per_tags)
+
+    if by_period == Period.month:
+        all_summaries = truncate_tasks_to_monthly(all_summaries)
 
     if simplify_texts:
         all_summaries = make_tasks_text_simpler(all_summaries)

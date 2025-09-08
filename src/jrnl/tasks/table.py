@@ -1,4 +1,4 @@
-from jrnl.tasks.protocols import DaySummary
+from jrnl.tasks.protocols import TasksSummary
 from nicegui import ui
 
 
@@ -11,7 +11,7 @@ def day_summaries_to_table(tasks: list[dict]) -> ui.table:
     {'name': 'task_ids', 'label': 'Task IDs', 'field': 'task_ids', 'required': True, 'align': 'left'},
     {'name': 'starred', 'label': 'Starred', 'field': 'starred', 'required': True, 'align': 'left', 'sortable': True},
 ]
-    rows = [DaySummary(**t).to_simpler_dict() for t in tasks]
+    rows = [TasksSummary(**t).to_simpler_dict() for t in tasks]
     table = ui.table(rows=rows, columns=columns)
     return table
 

@@ -54,7 +54,7 @@ class Columns:
 
 
 @dataclasses.dataclass
-class DaySummary:
+class TasksSummary:
     date: str
     tags: Iterable[str]
     total_time: datetime.timedelta | str
@@ -99,3 +99,9 @@ class EntryOutputFormat(StrEnum):
     tsv = auto()
     alfred = auto()
     pretty_table = auto()
+
+
+class Period(StrEnum):
+    day = auto()
+    month = auto()
+    year = auto()
