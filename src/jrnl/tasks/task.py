@@ -116,6 +116,15 @@ def get_task_status(entry: "Entry") -> TaskStatus | None:
     else:
         return None
 
+def get_task_date(entry: "Entry", status: TaskStatus) -> str | None:
+    title = entry['title'] if isinstance(entry, dict) else entry.title
+    if not f"@{status.value}" in title:
+        return None
+    if d := re.search(rf'@{status.value}:(\d+-\d+-\d+)', title):
+        return d.group(1)
+    else:
+        return None
+
 
 def remove_task_id(entry: "Entry") -> "Entry":
     entry.title = re.sub(rf"{TASK_ID_PHRASE}(\d+\.\d+)?", "", entry.title).strip()

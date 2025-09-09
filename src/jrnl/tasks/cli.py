@@ -13,7 +13,7 @@ from jrnl.tasks.gui import gui_update_task, gui_display_stats
 from jrnl.tasks.llm import make_task_bullets_simpler
 from jrnl.tasks.output import search_result_to_alfred
 from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks_as_dict, \
-    set_status_to_task, get_journal_file_path, get_summed_up_tasks, tasks_to_tsv
+    set_status_to_task, get_journal_file_path, get_summed_up_tasks, tasks_to_tsv, get_task_date
 from jrnl.tasks.protocols import TaskStatus, TaskOutputFormat, EntryOutputFormat, Period
 
 cli_app = cyclopts.App(help="[yellow]Manage tasks in your journal.[/yellow]", help_format='rich')
@@ -27,7 +27,7 @@ def list_tasks(date: str | None = None, output_format: EntryOutputFormat = Entry
         filtered_entries = []
         parsed_date = dateparser.parse(date).strftime('%Y-%m-%d')
         for result_entry in result['entries']:
-            if result_entry['date'] == parsed_date:
+            if result_entry['date'] == parsed_date or (get_task_date(result_entry, TaskStatus.completed) == parsed_date):
                 filtered_entries.append(result_entry)
         result['entries'] = filtered_entries
     match output_format:
