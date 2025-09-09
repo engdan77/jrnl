@@ -55,9 +55,9 @@ venv*/
 #  (Configuring ignored files for all repositories on your computer)
 #  Examples of such files are:
 # MS Visual Studio (PyTools)
-#   obj
-#   *.suo
+obj
+*.suo
 # PyCharm
-#   .idea/
+.idea/
 # VS Code
-#   .vscode/settings.json
+.vscode/settings.json
