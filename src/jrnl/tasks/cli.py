@@ -58,6 +58,13 @@ def search(keywords: list[str], output_format: EntryOutputFormat = EntryOutputFo
             print(json.dumps(result, indent=4))
         case EntryOutputFormat.alfred:
             print(search_result_to_alfred(result))
+        case EntryOutputFormat.tsv:
+            tsv = tasks_to_tsv(result['entries'])
+            print(tsv)
+        case EntryOutputFormat.pretty_table:
+            tsv = tasks_to_tsv(result['entries'])
+            data = list(csv.reader(io.StringIO(tsv), delimiter='\t'))
+            print(tabulate(data, headers="firstrow"))
     return result
 
 
