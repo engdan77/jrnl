@@ -10,10 +10,11 @@ from tabulate import tabulate
 import jrnl.tasks.gui
 import jrnl.tasks.sharedmem
 from jrnl.tasks.gui import gui_update_task, gui_display_stats
+from jrnl.tasks.llm import make_task_bullets_simpler
 from jrnl.tasks.output import search_result_to_alfred
 from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks_as_dict, \
-    set_status_to_task, get_journal_file_path, sum_up_by_date, tasks_to_tsv
-from jrnl.tasks.protocols import TaskStatus, TaskOutputFormat, EntryOutputFormat
+    set_status_to_task, get_journal_file_path, get_summed_up_tasks, tasks_to_tsv
+from jrnl.tasks.protocols import TaskStatus, TaskOutputFormat, EntryOutputFormat, Period
 
 cli_app = cyclopts.App(help="[yellow]Manage tasks in your journal.[/yellow]", help_format='rich')
 
@@ -98,22 +99,42 @@ def update_task(taskid: float | None = None):
 
 
 @cli_app.command
-def sum_up_day(date: str, to_date: str | None = None, output_format: TaskOutputFormat = TaskOutputFormat.json, simplify_texts: bool = False):
+def sum_up_tasks(date: str,
+                 to_date: str | None = None,
+                 output_format: TaskOutputFormat = TaskOutputFormat.json,
+                 simplify_texts: bool = False,
+                 by_period: Period = Period.day):
     """
-    Summarizes tasks for a given date or date range and prints the result.
+    Summarizes and outputs tasks for a given day or a time period.
 
-    Parameters
-    ----------
-    date
-        The starting date for summarization in string format.
-    to_date
-        The ending date for summarization in string format, or None to specify a single day.
-    output_format
-        The format in which the summarized tasks will be presented. Defaults to TaskOutputFormat.json.
-    simplify_texts
-        Determines if task descriptions should be simplified. Defaults to False.
+    This command aggregates tasks based on the provided date, optional end date, and
+    selected period. The tasks can be simplified and output in the desired format.
+
+    Parameters:
+    date : str
+        The starting date for the task summary. Expected format is `YYYY-MM-DD`.
+    to_date : str | None, optional
+        The optional ending date for the task summary. If not provided, only the
+        `date` parameter is considered. Expected format is `YYYY-MM-DD`.
+    output_format : TaskOutputFormat
+        The format in which the tasks should be displayed. Defaults to JSON format.
+    simplify_texts : bool
+        Determines whether task texts are simplified during output. Defaults to False.
+    by_period : Period
+        The time period for aggregating tasks. Defaults to daily (`Period.day`).
+
+    Returns:
+    None
+
+    Raises:
+    Exception
+        If an error occurs during the task aggregation or output process.
     """
-    summed_up_tasks = sum_up_by_date(date, to_date_string=to_date, output_format=output_format, simplify_texts=simplify_texts)
+    summed_up_tasks = get_summed_up_tasks(date,
+                                          to_date_string=to_date,
+                                          output_format=output_format,
+                                          simplify_texts=simplify_texts,
+                                          by_period=by_period)
     print(summed_up_tasks)
     ...
 
@@ -126,8 +147,16 @@ def journal_file():
 
 
 @cli_app.command
-def stats():
-    gui_display_stats('2025-09-01', '2025-09-04')
+def stats(from_date: str = 'Monday', to_date: str = 'Today'):
+    """Displays statistics for the period."""
+    gui_display_stats(from_date, to_date)
+
+
+@cli_app.command
+def clear_cache():
+    """Clears the cache for such as LLM summarization."""
+    logger.info('Clearing cache')
+    make_task_bullets_simpler.cache_clear()
 
 
 def main():
@@ -137,5 +166,5 @@ def main():
     logger.info('Exiting JRNL')
 
 
-if __name__ in {"__main__", "__mp_main__"}:
+if __name__ == "__main__":
     main()

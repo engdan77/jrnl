@@ -1,27 +1,42 @@
 import random
+from pathlib import Path
+
+import matplotlib
 import matplotlib.pyplot as plt
 from importlib.resources import files
 import matplotlib.font_manager as fm
+from matplotlib import patheffects
 
+matplotlib.set_loglevel("critical")
 
-font_resource = files(__package__) / 'hand.ttf'
-
-font_path = font_resource.name  # the location of the font file
+font_resource: Path = files(__package__) / 'hand.ttf'
+font_path = font_resource.as_posix()
 my_font = fm.FontProperties(fname=font_path)
 
+random.seed(42)  # Get more concistent colors
 random_color = lambda: '#' + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
 
 
-def plot_stacked_bar(categories, series, labels=None, colors=None, title='Simple Stacked Bar Chart', x_label='Category', y_label='Value'):
-    # series: list of lists, each inner list is a series for the categories
+def plot_stacked_bar(categories,
+                     series,
+                     labels=None,
+                     colors=None,
+                     title='Simple Stacked Bar Chart',
+                     y_label='Value',
+                     dark_mode=False,
+                     display=False,
+                     input_fig=None):
     with plt.xkcd():
-        fig, ax = plt.subplots(figsize=(6, 4))
+        if dark_mode:
+            plt.style.use(['dark_background'])
+            plt.rcParams['path.effects'] = [patheffects.withStroke(linewidth=0)]
+            plt.rcParams['figure.facecolor'] = 'black'
+        fig, ax = plt.subplots()
+        if input_fig:
+            fig = input_fig
+            ax = fig.gca()
         bottoms = [0] * len(categories)
 
-        if labels is None:
-            labels = [f'Series {i + 1}' for i in range(len(series))]
-
-        # Default colors if none provided (will cycle if more series)
         default_colors = [random_color() for _ in range(len(series))] + []
         if colors is None:
             colors = default_colors
@@ -37,15 +52,15 @@ def plot_stacked_bar(categories, series, labels=None, colors=None, title='Simple
             bottoms = [b + v for b, v in zip(bottoms, s)]
 
         ax.set_title(title, fontproperties=my_font)
-        ax.set_xlabel(x_label, fontproperties=my_font)
         ax.set_ylabel(y_label, fontproperties=my_font)
         for label in ax.get_xticklabels():
             label.set_fontproperties(my_font)
+            label.set_rotation(35)
         for label in ax.get_yticklabels():
             label.set_fontproperties(my_font)
         ax.legend(prop=my_font)
-        plt.tight_layout()
-        plt.show()
+        if display:
+            plt.show()
 
 
 def plot_pie(
@@ -58,6 +73,9 @@ def plot_pie(
     explode=None,
     donut=False,
     legend=True,
+    input_fig=None,
+    dark_mode=False,
+    display=False
 ):
     """
     Plot a pie (or donut) chart.
@@ -83,7 +101,14 @@ def plot_pie(
         explode = [0.0] * len(values)
 
     with plt.xkcd():
+        if dark_mode:
+            plt.style.use(['dark_background'])
+            plt.rcParams['path.effects'] = [patheffects.withStroke(linewidth=0)]
+            plt.rcParams['figure.facecolor'] = 'black'
         fig, ax = plt.subplots(figsize=(6, 4))
+        if input_fig:
+            fig = input_fig
+        ax = fig.gca()
 
         wedges, texts, autotexts = ax.pie(
             values,
@@ -137,7 +162,8 @@ def plot_pie(
 
         ax.set_aspect("equal")  # keep it circular
         plt.tight_layout()
-        plt.show()
+        if display:
+            plt.show()
 
 
 def example_stacked_chart():
@@ -155,9 +181,10 @@ def example_pie_chart():
     plot_pie(
         labels,
         values=[1, 2, 3, 4],
-        title='Simple Pie Chart'
+        title='Simple Pie Chart',
+        display=True
     )
 
 
 if __name__ == '__main__':
-    example_pie_chart()
+    example_stacked_chart()

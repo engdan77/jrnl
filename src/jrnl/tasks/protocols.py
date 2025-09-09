@@ -54,24 +54,32 @@ class Columns:
 
 
 @dataclasses.dataclass
-class DaySummary:
+class TasksSummary:
     date: str
     tags: Iterable[str]
     total_time: datetime.timedelta | str
     task_ids: Iterable[float]
     text_summary: str
     starred: bool
-    tags: Iterable[str]
 
     def to_simpler_dict(self):
         return {
             'date': self.date,
             'tags': ', '.join(self.tags),
-            'total_time': timedelta_to_string(self.total_time),
+            'total_time': timedelta_to_string(self.total_time) if isinstance(self.total_time, datetime.timedelta) else self.total_time,
             'task_ids': ', '.join(str(_) for _ in self.task_ids),
             'text_summary': self.text_summary,
             'starred': self.starred
         }
+
+
+class DaySummaryDict(TypedDict):
+    date: str
+    tags: list[str]
+    total_time: str
+    task_ids: list[float]
+    text_summary: str
+    starred: bool
 
 
 class TaskStatus(StrEnum):
@@ -91,3 +99,9 @@ class EntryOutputFormat(StrEnum):
     tsv = auto()
     alfred = auto()
     pretty_table = auto()
+
+
+class Period(StrEnum):
+    day = auto()
+    month = auto()
+    year = auto()

@@ -22,3 +22,7 @@ def timedelta_to_string(td: datetime.timedelta) -> str:
     if mins:
         output_string += f"{mins}m"
     return output_string.strip()
+
+
+def timedelta_to_hours(td: datetime.timedelta) -> float:
+    return td.total_seconds() / 3600
