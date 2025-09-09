@@ -50,7 +50,7 @@ def add_task(text: str):
 
 
 @cli_app.command
-def search(keywords: list[str], output_format: EntryOutputFormat = EntryOutputFormat.json) -> dict:
+def search(keywords: list[str], output_format: EntryOutputFormat = EntryOutputFormat.pretty_table) -> dict:
     """Search for entries in a journal using keywords as AND condition and return the results."""
     result = search_journal(keywords)
     match output_format:
