@@ -586,14 +586,20 @@ def day_summary_per_tags(day_summaries: list [DaySummaryDict]) -> Counter:
     return c
 
 
-def truncate_tasks_to_monthly(daily_tasks: list[TasksSummary]) -> list[TasksSummary]:
+def truncate_tasks_by_tags_and_period(daily_tasks: list[TasksSummary], by_period: Period = Period.month) -> list[TasksSummary]:
     output_tasks: list[TasksSummary] = []
-    monthly_tasks: dict[str, list[TasksSummary]] = defaultdict(list)
+    monthly_tasks: dict[tuple[str, tuple], list[TasksSummary]] = defaultdict(list)
     for task in daily_tasks:
         dt = datetime.datetime.strptime(task.date, '%Y-%m-%d')
-        year_month = dt.strftime('%Y-%m')
-        monthly_tasks[year_month].append(task)
-    for year_month, tasks_ in monthly_tasks.items():
+        tags = tuple(sorted(set(task.tags)))
+        dt_period = None
+        if by_period == Period.month:
+            dt_period = dt.strftime('%Y-%m')
+        elif by_period == Period.year:
+            dt_period = dt.strftime('%Y')
+        assert by_period is not None, "Unsupported period"
+        monthly_tasks[(dt_period, tags)].append(task)
+    for (dt_period, tags), tasks_ in monthly_tasks.items():
         monthly_duration = calc_total_duration(tasks_)
         all_texts = '\n'.join(t.text_summary for t in tasks_)
         starred = any(t.starred for t in tasks_)
@@ -601,7 +607,7 @@ def truncate_tasks_to_monthly(daily_tasks: list[TasksSummary]) -> list[TasksSumm
         tags = list(set(itertools.chain.from_iterable(t.tags for t in tasks_)))
         output_tasks.append(
             TasksSummary(
-                date=year_month,
+                date=dt_period,
                 text_summary=all_texts,
                 task_ids=task_ids,
                 starred=starred,
@@ -616,10 +622,9 @@ def truncate_tasks(tasks: list[TasksSummary], by: Period) -> list[TasksSummary]:
     """Truncate the task summary by period."""
     assert by is not Period.day, "Cannot truncate by day, use `sum_up_by_date` instead."
     output_tasks: list[TasksSummary] = []
-    monthly_tasks = truncate_tasks_to_monthly(tasks)
     match by:
         case Period.month:
-            output_tasks = monthly_tasks
+            output_tasks = truncate_tasks_by_tags_and_period(tasks)
         case _:
             raise ValueError(f"Unsupported period: {by}")
     return output_tasks
@@ -667,8 +672,8 @@ def get_summed_up_tasks(date_string: str,
         summary_per_tags: list[TasksSummary] = normalize_time_summaries(summary_per_tags)
         all_summaries.extend(summary_per_tags)
 
-    if by_period == Period.month:
-        all_summaries = truncate_tasks_to_monthly(all_summaries)
+    if by_period in (Period.month, Period.year):
+        all_summaries = truncate_tasks_by_tags_and_period(all_summaries, by_period=by_period)
 
     if simplify_texts:
         all_summaries = make_tasks_text_simpler(all_summaries)
