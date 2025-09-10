@@ -1,4 +1,6 @@
+import dataclasses
 import datetime
+import functools
 import re
 
 from loguru import logger
@@ -41,6 +43,14 @@ def validate_duration(duration: str):
     return bool(valid)
 
 
+@dataclasses.dataclass
+class TaskRowsStyle:
+    column_styling: str = '30px 80px 700px 100px 60px 90px'
+    classes_styling: str = 'w-full'
+    red_style: Tailwind = Tailwind().text_color('red-600').font_weight('bold')
+    header_style: Tailwind = Tailwind().text_color('yellow-600').font_weight('bold')
+
+
 def gui_update_task(taskid: float | str | None = None):
     journal, journal_file = get_journal()
 
@@ -52,51 +62,25 @@ def gui_update_task(taskid: float | str | None = None):
         set_shared(get_next_sub_taskid(journal, taskid))
         tasks = get_tasks_by_id(float(taskid))
 
-    ui.markdown("#### Tasks ✅")
-    ui.label(__version__)
-    ui.dark_mode().enable()
-    container = ui.column()
-
     if taskid is not None:
         set_shared(get_next_sub_taskid(journal, taskid))
     else:
         set_shared(get_next_taskid(journal))
 
-    column_styling = '30px 80px 700px 100px 60px 90px'
-    classes_styling = 'w-full'
+    container = gui_get_task_rows_container()
 
-    red_style = Tailwind().text_color('red-600').font_weight('bold')
-    header_style = Tailwind().text_color('yellow-600').font_weight('bold')
+    s = TaskRowsStyle()
 
-    header_titles = ('ID', 'Date', 'Title', 'Status', 'Starred', 'Duration')
+    gui_create_task_rows(tasks=tasks, container=container, styling=s, highlight_taskid=taskid)
 
-    with container:
-        with ui.grid(columns=column_styling).classes(classes_styling) as row:
-            for h in header_titles:
-                header_style.apply(ui.label(h))
-            rows.append(row)
-        for task in tasks:
-            id_ = str(get_task_id(task))
-            current_duration_string = timedelta_to_string(get_duration(task))
-            with ui.grid(columns=column_styling).classes(classes_styling) as row:
-                id_label = ui.label(id_)
-                if str(taskid) == id_:
-                    red_style.apply(id_label)
-                ui.label(task['date'])
-                ui.input(value=task['title'])
-                ui.select({s.title(): s.value for s in TaskStatus}, value=get_task_status(task).title())
-                ui.checkbox(value=task['starred'])
-                ui.input(value=current_duration_string, validation={'Shall be in 1d2h3m format': validate_duration})
-                rows.append(row)
-
-    def add_task():
+    def add_task(container_: ui.column, styling: TaskRowsStyle=s):
         next_subtask_id = get_shared()
-        with container:
-            with ui.grid(columns=column_styling).classes(classes_styling) as subtask_row:
+        with container_:
+            with ui.grid(columns=styling.column_styling).classes(styling.classes_styling) as subtask_row:
                 ui.label(str(next_subtask_id))
                 ui.label(f'{datetime.datetime.now():%Y-%m-%d}')
                 ui.input()
-                ui.select({s.title(): s.value for s in TaskStatus}, value='Todo')
+                ui.select({s_.title(): s_.value for s_ in TaskStatus}, value='Todo')
                 ui.checkbox(value=False)
                 ui.input(value='', validation={'Shall be in 1d2h3m format': validate_duration})
                 next_subtask_id = round(float(next_subtask_id) + 0.1, 2)
@@ -109,10 +93,40 @@ def gui_update_task(taskid: float | str | None = None):
     else:
         add_label = 'Add task'
 
-    ui.button(add_label, on_click=add_task)
+    ui.button(add_label, on_click=functools.partial(add_task, *[container, s]))
     ui.button('Save', on_click=save_rows)
     ui.on_shutdown = close_shared
     ui.run(native=True, reload=False, window_size=(1280, 720), title=TITLE)
+
+
+def gui_get_task_rows_container():
+    ui.markdown("#### Tasks ✅")
+    ui.label(__version__)
+    ui.dark_mode().enable()
+    container = ui.column()
+    return container
+
+
+def gui_create_task_rows(tasks: list, container: ui.column, styling: TaskRowsStyle, highlight_taskid: float | str | None = None):
+    header_titles = ('ID', 'Date', 'Title', 'Status', 'Starred', 'Duration')
+    with container:
+        with ui.grid(columns=styling.column_styling).classes(styling.classes_styling) as row:
+            for h in header_titles:
+                styling.header_style.apply(ui.label(h))
+            rows.append(row)
+        for task in tasks:
+            id_ = str(get_task_id(task))
+            current_duration_string = timedelta_to_string(get_duration(task))
+            with ui.grid(columns=styling.column_styling).classes(styling.classes_styling) as row:
+                id_label = ui.label(id_)
+                if highlight_taskid and str(highlight_taskid) == id_:
+                    styling.red_style.apply(id_label)
+                ui.label(task['date'])
+                ui.input(value=task['title'])
+                ui.select({s.title(): s.value for s in TaskStatus}, value=get_task_status(task).title())
+                ui.checkbox(value=task['starred'])
+                ui.input(value=current_duration_string, validation={'Shall be in 1d2h3m format': validate_duration})
+                rows.append(row)
 
 
 def gui_display_stats(from_date: str, to_date: str, dark_theme=False):
