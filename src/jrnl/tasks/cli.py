@@ -9,7 +9,7 @@ from tabulate import tabulate
 
 import jrnl.tasks.gui
 import jrnl.tasks.sharedmem
-from jrnl.tasks.gui import gui_update_task, gui_display_stats
+from jrnl.tasks.gui import gui_update_task, gui_display_stats, gui_display_todos
 from jrnl.tasks.llm import make_task_bullets_simpler
 from jrnl.tasks.output import search_result_to_alfred
 from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks_as_dict, \
@@ -150,6 +150,12 @@ def journal_file():
 def stats(from_date: str = 'Monday', to_date: str = 'Today'):
     """Displays statistics for the period."""
     gui_display_stats(from_date, to_date)
+
+
+@cli_app.command
+def todos():
+    """Displays tasks that are not completed yet."""
+    gui_display_todos()
 
 
 @cli_app.command

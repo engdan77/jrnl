@@ -358,6 +358,17 @@ def get_tasks_by_date(date_string: str, task_statuses: Iterable[TaskStatus] = (T
     return output_tasks
 
 
+def get_tasks_by_status(status: TaskStatus) -> list[TaskEntryDict]:
+    """Return all (associated) tasks with the given status."""
+    output_tasks = []
+    all_tasks = get_all_tasks_as_dict()
+    for task in all_tasks['entries']:
+        if get_task_status(task) == status:
+            task['tags'] = remove_redundant_tags(task['tags'])
+            output_tasks.append(task)
+    return output_tasks
+
+
 def get_tasks_grouped_by_tags(tasks: list[TaskEntryDict]) -> dict[tuple[str], list[TaskEntryDict]]:
     tags_grouped_tasks = defaultdict(list)
     for task in tasks:

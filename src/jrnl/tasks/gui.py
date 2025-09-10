@@ -14,7 +14,7 @@ from jrnl.tasks.sharedmem import set_shared, get_shared, create_shared, close_sh
 from jrnl.tasks.table import day_summaries_to_table
 from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, get_task_status, \
     get_duration, update_task_by_gui_columns, get_all_tasks, get_next_taskid, get_summed_up_tasks, \
-    day_summary_to_bar_chart_data, day_summary_per_tags
+    day_summary_to_bar_chart_data, day_summary_per_tags, get_tasks_by_status, get_tasks_grouped_by_tags
 from jrnl.tasks.time import timedelta_to_string
 from jrnl.tasks.protocols import Columns, TaskStatus, TaskOutputFormat, DaySummaryDict
 
@@ -51,6 +51,23 @@ class TaskRowsStyle:
     header_style: Tailwind = Tailwind().text_color('yellow-600').font_weight('bold')
 
 
+def gui_display_todos():
+    all_todos = get_tasks_by_status(TaskStatus.todo)
+    tasks_per_tag = get_tasks_grouped_by_tags(all_todos)
+    for tag, tasks in sorted(tasks_per_tag.items()):
+        logger.info(f'Tag: {tag}')
+        all_containers = []
+        header = ', '.join(tag).replace('@', '')
+        container = gui_get_task_rows_container(header_markdown=f'#### {header}', display_version=False)
+        all_containers.append(container)
+        gui_create_task_rows(
+            tasks=tasks,
+            container=container,
+            styling=TaskRowsStyle(),
+        )
+    run_gui()
+
+
 def gui_update_task(taskid: float | str | None = None):
     journal, journal_file = get_journal()
 
@@ -67,7 +84,7 @@ def gui_update_task(taskid: float | str | None = None):
     else:
         set_shared(get_next_taskid(journal))
 
-    container = gui_get_task_rows_container()
+    container = gui_get_task_rows_container(header_markdown="#### Tasks ✅", display_version=True)
 
     s = TaskRowsStyle()
 
@@ -96,12 +113,17 @@ def gui_update_task(taskid: float | str | None = None):
     ui.button(add_label, on_click=functools.partial(add_task, *[container, s]))
     ui.button('Save', on_click=save_rows)
     ui.on_shutdown = close_shared
-    ui.run(native=True, reload=False, window_size=(1280, 720), title=TITLE)
+    run_gui()
 
 
-def gui_get_task_rows_container():
-    ui.markdown("#### Tasks ✅")
-    ui.label(__version__)
+def run_gui(title: str = TITLE, window_size: tuple[int, int] = (1280, 720)):
+    ui.run(native=True, reload=False, window_size=window_size, title=title)
+
+
+def gui_get_task_rows_container(header_markdown: str = "#### Tasks ✅", display_version: bool = True):
+    ui.markdown(header_markdown)
+    if display_version:
+        ui.label(__version__)
     ui.dark_mode().enable()
     container = ui.column()
     return container
@@ -154,4 +176,4 @@ def gui_display_stats(from_date: str, to_date: str, dark_theme=False):
             input_fig=fig
         )
     day_summaries_to_table(day_summaries)
-    ui.run(native=True, reload=False, window_size=(1280, 720), title=TITLE)
+    run_gui()
