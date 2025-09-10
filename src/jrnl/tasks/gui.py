@@ -55,7 +55,6 @@ def gui_display_todos():
     all_todos = get_tasks_by_status(TaskStatus.todo)
     tasks_per_tag = get_tasks_grouped_by_tags(all_todos)
     for tag, tasks in sorted(tasks_per_tag.items()):
-        logger.info(f'Tag: {tag}')
         all_containers = []
         header = ', '.join(tag).replace('@', '')
         container = gui_get_task_rows_container(header_markdown=f'#### {header}', display_version=False)
