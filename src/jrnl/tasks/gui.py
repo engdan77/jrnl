@@ -27,9 +27,13 @@ def save_rows():
     headers, *items = rows
     for item in items:
         columns = Columns(*list(item.descendants()))
-        if not columns.to_dict().get('title', None):
-            logger.info('Skipping empty row')
-            continue
+        try:
+            if not columns.to_dict().get('title', None):
+                logger.info('Skipping empty row')
+                continue
+        except AttributeError as e:
+            if columns.has_only_labels:
+                continue  # Skipping this as being a header with only labels
         if columns.starred.value is True and not columns.title.value.endswith('*'):
             columns.title.value += ' *'
         update_task_by_gui_columns(columns)

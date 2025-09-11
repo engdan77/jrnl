@@ -3,6 +3,8 @@ import datetime
 from enum import StrEnum, auto
 from typing import TypedDict, Protocol, Iterable
 
+import nicegui
+
 from jrnl.tasks.time import timedelta_to_string
 
 
@@ -51,6 +53,10 @@ class Columns:
             'starred': self.starred.value,
             'duration': self.duration.value,
         }
+
+    @property
+    def has_only_labels(self):
+        return set(type(col) for col in dataclasses.asdict(self).values()) == {nicegui.elements.label.Label}
 
 
 @dataclasses.dataclass
