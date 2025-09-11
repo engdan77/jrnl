@@ -64,6 +64,7 @@ def gui_display_todos():
             container=container,
             styling=TaskRowsStyle(),
         )
+    ui.button('Save', on_click=save_rows)
     run_gui()
 
 
