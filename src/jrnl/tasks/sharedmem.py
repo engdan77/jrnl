@@ -23,7 +23,7 @@ def get_shared():
 
 
 def close_shared():
-    logger.debug('Closing shared memory')
+    # logger.debug('Closing shared memory')
     global share_mem_pointer
     if share_mem_pointer is not None:
         share_mem_pointer.shm.close()
