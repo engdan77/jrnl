@@ -1,6 +1,7 @@
 import csv
 import io
 import json
+import time
 
 import cyclopts
 import dateparser
@@ -135,8 +136,8 @@ def sum_up_tasks(date: str,
                                           output_format=output_format,
                                           simplify_texts=simplify_texts,
                                           by_period=by_period)
+    time.sleep(1)  # Just to ensure loggings comes before printing
     print(summed_up_tasks)
-    ...
 
 
 @cli_app.command
