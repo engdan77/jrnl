@@ -353,6 +353,10 @@ def get_tasks_by_date(date_string: str, task_statuses: Iterable[TaskStatus] = (T
         if task_status not in task_statuses:
             continue
         if date in task['date'] or any(f'@{t.value}:{date}' in task['title'] for t in task_statuses):
+            if task['date'] is not date:
+                task_id = get_task_id(task)
+                logger.debug(f"Task {task_id} has date {task['date']} but completed other date, updating to {date}")
+                task['date'] = date
             task['tags'] = remove_redundant_tags(task['tags'])
             output_tasks.append(task)
     return output_tasks
