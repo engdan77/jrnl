@@ -148,9 +148,9 @@ def journal_file():
 
 
 @cli_app.command
-def stats(from_date: str = 'Monday', to_date: str = 'Today'):
+def stats(from_date: str = 'Monday', to_date: str = 'Today', by_period: Period = Period.day):
     """Displays statistics for the period."""
-    gui_display_stats(from_date, to_date)
+    gui_display_stats(from_date, to_date, by_period=by_period)
 
 
 @cli_app.command

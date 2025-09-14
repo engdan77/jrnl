@@ -588,7 +588,7 @@ def get_date_range(from_date: str, to_date: str) -> Generator[str]:
 def day_summary_to_bar_chart_data(day_summaries: list[DaySummaryDict]) -> tuple[Annotated[list, 'x_axis'], Annotated[list[list], 'series'], Annotated[list, 'labels']]:
     summary = defaultdict(dict)
     for s in day_summaries:
-        tag = s['tags']
+        tag = tuple(s['tags'])
         summary[s['date']][tag] = string_to_timedelta(s['total_time'])
     x_axis = list(sorted(summary.keys()))
     labels = sorted(list(set(itertools.chain.from_iterable([day.keys() for day in summary.values()]))))

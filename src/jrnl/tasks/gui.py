@@ -16,7 +16,7 @@ from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_
     get_duration, update_task_by_gui_columns, get_all_tasks, get_next_taskid, get_summed_up_tasks, \
     day_summary_to_bar_chart_data, day_summary_per_tags, get_tasks_by_status, get_tasks_grouped_by_tags
 from jrnl.tasks.time import timedelta_to_string
-from jrnl.tasks.protocols import Columns, TaskStatus, TaskOutputFormat, DaySummaryDict
+from jrnl.tasks.protocols import Columns, TaskStatus, TaskOutputFormat, DaySummaryDict, Period
 
 TITLE = '📔 Task Journal ✅'
 
@@ -155,12 +155,15 @@ def gui_create_task_rows(tasks: list, container: ui.column, styling: TaskRowsSty
                 rows.append(row)
 
 
-def gui_display_stats(from_date: str, to_date: str, dark_theme=False):
+def gui_display_stats(from_date: str, to_date: str, by_period: Period = Period.day, dark_theme=False):
     if dark_theme:
         ui.dark_mode().enable()
-    day_summaries: list [DaySummaryDict] = get_summed_up_tasks(from_date, to_date, simplify_texts=True, output_format=TaskOutputFormat.dict)
-    duration_per_tags = day_summary_per_tags(day_summaries)
-    x_axis, series, labels = day_summary_to_bar_chart_data(day_summaries)
+    tasks_summaries: list [DaySummaryDict] = get_summed_up_tasks(from_date, to_date, simplify_texts=True, output_format=TaskOutputFormat.dict, by_period=by_period)
+    page_title(
+        f'Stats from {from_date} to {to_date} ({len(tasks_summaries)} days)'
+    )
+    duration_per_tags = day_summary_per_tags(tasks_summaries)
+    x_axis, series, labels = day_summary_to_bar_chart_data(tasks_summaries)
     with ui.matplotlib(figsize=(16, 6)).figure as fig:
         categories = x_axis
         plot_stacked_bar(
@@ -179,5 +182,5 @@ def gui_display_stats(from_date: str, to_date: str, dark_theme=False):
             title=f'Tid per projekt [total {duration_per_tags.total():g}h]',
             input_fig=fig
         )
-    day_summaries_to_table(day_summaries)
+    day_summaries_to_table(tasks_summaries)
     run_gui()

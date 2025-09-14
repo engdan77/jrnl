@@ -1,8 +1,8 @@
-from jrnl.tasks.protocols import TasksSummary
+from jrnl.tasks.protocols import TasksSummary, DaySummaryDict
 from nicegui import ui
 
 
-def day_summaries_to_table(tasks: list[dict]) -> ui.table:
+def day_summaries_to_table(tasks: list[DaySummaryDict]) -> ui.table:
     columns = [
     {'name': 'date', 'label': 'Date', 'field': 'date', 'required': True, 'align': 'left', 'sortable': True},
     {'name': 'total_time', 'label': 'Time', 'field': 'total_time', 'required': True, 'align': 'left', 'sortable': True},
