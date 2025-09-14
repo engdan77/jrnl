@@ -14,7 +14,8 @@ from jrnl.tasks.sharedmem import set_shared, get_shared, create_shared, close_sh
 from jrnl.tasks.table import day_summaries_to_table
 from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, get_task_status, \
     get_duration, update_task_by_gui_columns, get_all_tasks, get_next_taskid, get_summed_up_tasks, \
-    day_summary_to_bar_chart_data, day_summary_per_tags, get_tasks_by_status, get_tasks_grouped_by_tags
+    day_summary_to_bar_chart_data, day_summary_per_tags, get_tasks_by_status, get_tasks_grouped_by_tags, \
+    is_string_part_of_tags
 from jrnl.tasks.time import timedelta_to_string
 from jrnl.tasks.protocols import Columns, TaskStatus, TaskOutputFormat, DaySummaryDict, Period
 
@@ -155,10 +156,12 @@ def gui_create_task_rows(tasks: list, container: ui.column, styling: TaskRowsSty
                 rows.append(row)
 
 
-def gui_display_stats(from_date: str, to_date: str, by_period: Period = Period.day, dark_theme=False):
+def gui_display_stats(from_date: str, to_date: str, by_period: Period = Period.day, include_tags: list[str] | None = None, dark_theme=False):
     if dark_theme:
         ui.dark_mode().enable()
     tasks_summaries: list [DaySummaryDict] = get_summed_up_tasks(from_date, to_date, simplify_texts=True, output_format=TaskOutputFormat.dict, by_period=by_period)
+    if include_tags:
+        tasks_summaries = [t for t in tasks_summaries if any(is_string_part_of_tags(tag, t['tags']) for tag in include_tags)]
     page_title(
         f'Stats from {from_date} to {to_date} ({len(tasks_summaries)} days)'
     )

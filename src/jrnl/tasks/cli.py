@@ -148,9 +148,17 @@ def journal_file():
 
 
 @cli_app.command
-def stats(from_date: str = 'Monday', to_date: str = 'Today', by_period: Period = Period.day):
-    """Displays statistics for the period."""
-    gui_display_stats(from_date, to_date, by_period=by_period)
+def stats(from_date: str = 'Monday', to_date: str = 'Today', by_period: Period = Period.day, include_only_tag: list[str] | None = None):
+    """
+    Retrieve and display statistical data for a specific time period
+
+    Parameters:
+        from_date: The starting date for the statistics in string format.
+        to_date: The ending date for the statistics in string format
+        by_period: The periodicity for the statistics (e.g., day, week, month)
+        include_only_tag: An optional list of specific tags to include in the statistics, use "unknown" to include those without tags
+    """
+    gui_display_stats(from_date, to_date, by_period=by_period, include_tags=include_only_tag)
 
 
 @cli_app.command

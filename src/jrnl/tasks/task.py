@@ -585,6 +585,19 @@ def get_date_range(from_date: str, to_date: str) -> Generator[str]:
         yield f'{from_date_dt + datetime.timedelta(days=n):%Y-%m-%d}'
 
 
+def is_string_part_of_tags(search_string: str, tags: Iterable[str]) -> bool:
+    if tags == []:
+        tags = ['unknown']  # To ensure one can include by CLI by --include-only-tag unknown
+    if search_string in tags:
+        return True
+    for tag in tags:
+        if search_string in tag:
+            return True
+    if ','.join(sorted(search_string.split(','))) == ','.join(sorted(tags)):
+        return True
+    return False
+
+
 def day_summary_to_bar_chart_data(day_summaries: list[DaySummaryDict]) -> tuple[Annotated[list, 'x_axis'], Annotated[list[list], 'series'], Annotated[list, 'labels']]:
     summary = defaultdict(dict)
     for s in day_summaries:
