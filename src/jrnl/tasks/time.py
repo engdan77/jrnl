@@ -1,5 +1,6 @@
 import datetime
 import re
+from dateparser import parse
 
 
 def string_to_timedelta(s: str) -> datetime.timedelta:
@@ -26,3 +27,14 @@ def timedelta_to_string(td: datetime.timedelta) -> str:
 
 def timedelta_to_hours(td: datetime.timedelta) -> float:
     return td.total_seconds() / 3600
+
+
+def normalize_date(from_date: str, to_date: str) -> str:
+    """Normalize a date string to YYYY-MM-DD format, and ensure to cover complete week for e.g, Monday to Friday."""
+    weekday_today = datetime.date.today().strftime('%A')
+    if (from_date.lower(), to_date.lower()) == ('monday', 'friday'):
+        return weekday_today
+    match weekday_today:
+        case 'Monday':
+            from_date = parse(from_date, settings={'PREFER_DATES_FROM': 'past'})
+    return parse(from_date).strftime("%Y-%m-%d")
