@@ -41,5 +41,24 @@ def normalize_date(from_date: str, to_date: str) -> tuple[str, str]:
         last_monday = parse(from_date, settings={'PREFER_DATES_FROM': 'past'})
         coming_friday = date_today if weekday_today == 'friday' else parse(to_date, settings={'PREFER_DATES_FROM': 'future'}).isoformat()
         return last_monday, coming_friday
+    elif (from_date.lower(), to_date.lower()) == ('last monday', 'last friday'):
+        last_monday, last_friday = previous_week_monday_friday()
+        return last_monday, last_friday
+    elif from_date.lower() == 'this month':
+        return f'{datetime.date.today():%Y-%m-01}', parse(to_date).strftime("%Y-%m-%d")
     else:
         return parse(from_date).strftime("%Y-%m-%d"), parse(to_date).strftime("%Y-%m-%d")
+
+
+def previous_week_monday_friday(reference: datetime.date | None = None) -> tuple[str, str]:
+    """
+    Return the (Monday, Friday) dates for the week immediately preceding the week of `reference`.
+    If `reference` is None, use today's date.
+
+    Weeks are considered Monday (0) to Sunday (6).
+    """
+    ref = reference or datetime.date.today()
+    current_week_monday = ref - datetime.timedelta(days=ref.weekday())  # Monday of the current week
+    prev_week_monday = current_week_monday - datetime.timedelta(days=7)
+    prev_week_friday = prev_week_monday + datetime.timedelta(days=4)
+    return prev_week_monday.isoformat(), prev_week_friday.isoformat()

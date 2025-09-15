@@ -151,7 +151,13 @@ def journal_file():
 @cli_app.command
 def stats(from_date: str = 'Monday', to_date: str = 'Today', by_period: Period = Period.day, include_only_tag: list[str] | None = None):
     """
-    Retrieve and display statistical data for a specific time period
+    Retrieve and display statistical data for a specific time period.\n
+    [blue]Usage examples:
+        jrnl-cli stats 2023-01-01 2023-01-31 --by-period=month
+        jrnl-cli stats monday friday --by-period=day
+        jrnl-cli stats "last monday" "last friday" --by-period=day
+        jrnl-cli stats "this month" today --include-only-tag unknown --include-only-tag foo
+    [/blue]
 
     Parameters:
         from_date: The starting date for the statistics in string format.
