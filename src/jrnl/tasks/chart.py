@@ -1,4 +1,5 @@
 import random
+import re
 from pathlib import Path
 
 import matplotlib
@@ -119,7 +120,7 @@ def plot_pie(
             explode=explode,
             wedgeprops=dict(width=0.4 if donut else 1.0, edgecolor="white"),
             pctdistance=0.75 if donut else 0.6,
-            textprops=dict(color="black"),
+            textprops=dict(color="white" if dark_mode else "black"),
         )
 
         # Title and font handling
@@ -134,6 +135,13 @@ def plot_pie(
                 t.set_fontproperties(my_font)  # noqa: F821
         except NameError:
             pass
+
+        # Merge label + percentage into a single autotext (e.g., "A 25.0%")
+        if labels is not None and autopct:
+            for i, t in enumerate(autotexts):
+                x = re.sub(r'\s\[.+?]', '', labels[i])
+                new_label = f"{x} {t.get_text()}"
+                t.set_text(new_label)
 
         # For donut charts, optionally put a centered label or just keep it clean
         if donut:

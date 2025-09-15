@@ -173,8 +173,8 @@ def gui_display_stats(from_date: str, to_date: str, by_period: Period = Period.d
             categories,
             series=series,
             labels=labels,
-            title='Projekt och tid',
-            y_label='Timmar',
+            title='Project and time',
+            y_label='Hours',
             input_fig=fig,
         )
     with ui.matplotlib(figsize=(9, 6)).figure as fig:
@@ -182,7 +182,7 @@ def gui_display_stats(from_date: str, to_date: str, by_period: Period = Period.d
         plot_pie(
             labels,
             values=duration_per_tags.values(),
-            title=f'Tid per projekt [total {duration_per_tags.total():g}h]',
+            title=f'Total time per project [total {duration_per_tags.total():g}h]',
             input_fig=fig
         )
     day_summaries_to_table(tasks_summaries)
