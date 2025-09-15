@@ -16,6 +16,7 @@ from jrnl.tasks.output import search_result_to_alfred
 from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks_as_dict, \
     set_status_to_task, get_journal_file_path, get_summed_up_tasks, tasks_to_tsv, get_task_date
 from jrnl.tasks.protocols import TaskStatus, TaskOutputFormat, EntryOutputFormat, Period
+from jrnl.tasks.time import normalize_date
 
 cli_app = cyclopts.App(help="[yellow]Manage tasks in your journal.[/yellow]", help_format='rich')
 
@@ -158,7 +159,8 @@ def stats(from_date: str = 'Monday', to_date: str = 'Today', by_period: Period =
         by_period: The periodicity for the statistics (e.g., day, week, month)
         include_only_tag: An optional list of specific tags to include in the statistics, use "unknown" to include those without tags
     """
-    gui_display_stats(from_date, to_date, by_period=by_period, include_tags=include_only_tag)
+    from_, to_ = normalize_date(from_date, to_date)
+    gui_display_stats(from_, to_, by_period=by_period, include_tags=include_only_tag)
 
 
 @cli_app.command

@@ -29,12 +29,17 @@ def timedelta_to_hours(td: datetime.timedelta) -> float:
     return td.total_seconds() / 3600
 
 
-def normalize_date(from_date: str, to_date: str) -> str:
+def normalize_date(from_date: str, to_date: str) -> tuple[str, str]:
     """Normalize a date string to YYYY-MM-DD format, and ensure to cover complete week for e.g, Monday to Friday."""
-    weekday_today = datetime.date.today().strftime('%A')
+    weekday_today = datetime.date.today().strftime('%A').lower()
+    date_today = datetime.date.today().isoformat()
     if (from_date.lower(), to_date.lower()) == ('monday', 'friday'):
-        return weekday_today
-    match weekday_today:
-        case 'Monday':
-            from_date = parse(from_date, settings={'PREFER_DATES_FROM': 'past'})
-    return parse(from_date).strftime("%Y-%m-%d")
+        if weekday_today == 'monday':
+            last_monday = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+            last_friday = (datetime.date.today() - datetime.timedelta(days=3)).isoformat()
+            return last_monday, last_friday
+        last_monday = parse(from_date, settings={'PREFER_DATES_FROM': 'past'})
+        coming_friday = date_today if weekday_today == 'friday' else parse(to_date, settings={'PREFER_DATES_FROM': 'future'}).isoformat()
+        return last_monday, coming_friday
+    else:
+        return parse(from_date).strftime("%Y-%m-%d"), parse(to_date).strftime("%Y-%m-%d")
