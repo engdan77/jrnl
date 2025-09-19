@@ -14,7 +14,8 @@ from jrnl.tasks.gui import gui_update_task, gui_display_stats, gui_display_todos
 from jrnl.tasks.llm import make_task_bullets_simpler
 from jrnl.tasks.output import search_result_to_alfred
 from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks_as_dict, \
-    set_status_to_task, get_journal_file_path, get_summed_up_tasks, tasks_to_tsv, get_task_date
+    set_status_to_task, get_journal_file_path, get_summed_up_tasks, tasks_to_tsv, get_task_date, get_tasks_by_date, \
+    get_summarized_time
 from jrnl.tasks.protocols import TaskStatus, TaskOutputFormat, EntryOutputFormat, Period
 from jrnl.tasks.time import normalize_date
 
@@ -167,6 +168,14 @@ def stats(from_date: str = 'Monday', to_date: str = 'Today', by_period: Period =
     """
     from_, to_ = normalize_date(from_date, to_date)
     gui_display_stats(from_, to_, by_period=by_period, include_tags=include_only_tag)
+
+
+@cli_app.command
+def time_summary(date: str = 'today'):
+    """Returns a summary of time spent on tasks in a given time period {"hours_spent": 3}"""
+    tasks = get_tasks_by_date(date)
+    hours_spent = get_summarized_time(tasks)
+    print(json.dumps({"hours_spent": hours_spent}))
 
 
 @cli_app.command

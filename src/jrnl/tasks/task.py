@@ -728,6 +728,18 @@ def get_summed_up_tasks(date_string: str,
             ...
 
 
+def get_summarized_time(tasks: list[TaskEntryDict]) -> int:
+    """This is the format to JSON that could be used for example StreamDeck"""
+    items = []
+    total_duration = datetime.timedelta()
+    for task in tasks:
+        duration = get_duration(task)
+        total_duration += duration
+
+    hours_spent = seconds / 3600 if (seconds := total_duration.total_seconds()) else 0
+    return int(hours_spent)
+
+
 def example_tasks():
     # add_task_to_journal("My super duper task")
     # logger.info("Example tasks added")
