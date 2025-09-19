@@ -189,4 +189,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except ConnectionError as e:
+        logger.error(f'Connection error: {e}')
+        raise SystemExit(1)

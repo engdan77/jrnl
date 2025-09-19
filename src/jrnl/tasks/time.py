@@ -38,7 +38,7 @@ def normalize_date(from_date: str, to_date: str) -> tuple[str, str]:
             last_monday = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
             last_friday = (datetime.date.today() - datetime.timedelta(days=3)).isoformat()
             return last_monday, last_friday
-        last_monday = parse(from_date, settings={'PREFER_DATES_FROM': 'past'})
+        last_monday = parse(from_date, settings={'PREFER_DATES_FROM': 'past'}).isoformat()
         coming_friday = date_today if weekday_today == 'friday' else parse(to_date, settings={'PREFER_DATES_FROM': 'future'}).isoformat()
         return last_monday, coming_friday
     elif (from_date.lower(), to_date.lower()) == ('last monday', 'last friday'):

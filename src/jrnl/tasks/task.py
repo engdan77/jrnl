@@ -693,7 +693,7 @@ def get_summed_up_tasks(date_string: str,
         No exceptions are specified for this function.
     """
     if to_date_string:
-        dates = get_date_range(date_string, to_date_string)
+        dates = list(get_date_range(date_string, to_date_string))
     else:
         dates = [date_string]
 
