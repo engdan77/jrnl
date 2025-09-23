@@ -2,6 +2,7 @@ import csv
 import io
 import json
 import time
+from pathlib import Path
 
 import cyclopts
 import dateparser
@@ -10,6 +11,7 @@ from tabulate import tabulate
 
 import jrnl.tasks.gui
 import jrnl.tasks.sharedmem
+from jrnl.tasks.dirs import load_preference, store_preference
 from jrnl.tasks.gui import gui_update_task, gui_display_stats, gui_display_todos
 from jrnl.tasks.llm import make_task_bullets_simpler
 from jrnl.tasks.output import search_result_to_alfred
@@ -173,8 +175,18 @@ def stats(from_date: str = 'Monday', to_date: str = 'Today', by_period: Period =
 @cli_app.command
 def time_summary(date: str = 'today'):
     """Returns a summary of time spent on tasks in a given time period {"hours_spent": 3}"""
-    tasks = get_tasks_by_date(date)
-    hours_spent = get_summarized_time(tasks)
+    journal_file = get_journal_file_path()
+    last_modified = Path(journal_file).stat().st_mtime
+    last_cached = load_preference('last_modified')
+    if str(last_modified) != last_cached:
+        logger.info(f'Updating hours spent for {date}')
+        tasks = get_tasks_by_date(date)
+        hours_spent = get_summarized_time(tasks)
+        store_preference('last_modified', str(last_modified))
+        store_preference('hours_spent', hours_spent)
+    else:
+        logger.info(f'Using cached hours spent for {date}')
+        hours_spent = load_preference('hours_spent')
     print(json.dumps({"hours_spent": hours_spent}))
 
 
