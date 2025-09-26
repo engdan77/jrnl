@@ -26,6 +26,17 @@ if TYPE_CHECKING:
 TASK_ID_PHRASE: Final = "@task:"
 DURATION_PHRASE: Final = "@spent:"
 
+NON_BILLABLE_PROJECT_SUFFIXES = (
+    'non-billable',
+    'nonbillable',
+    'no-billable',
+    'nobillable',
+    'no-bill',
+    'not-billable',
+    'notbillable',
+
+)
+
 
 def has_task_status(entry: "Entry") -> bool:
     for status in TaskStatus:
@@ -205,6 +216,10 @@ def replace_duration(entry: "Entry", duration: datetime.timedelta) -> "Entry":
     return entry
 
 
+def apply_non_billable(input_text: str) -> str:
+    return re.sub(r'(.+?@\S+)([_-]no[^\b]{,3}bill\w*)(.*)', r'\1-nonbillable\3', input_text)
+
+
 def apply_initial_task_properties(entry: "Entry", journal: "Journal", override_task_id: float | None = None) -> "Entry":
     if override_task_id:
         set_task_id(override_task_id, entry)
@@ -245,6 +260,7 @@ def get_journal(journal_name: str = "default") -> tuple["Journal", str]:
 def add_task_to_journal(raw: str, journal_name: str = "default"):
     """Main function to add a task to the journal."""
     journal, journal_file = get_journal()
+    raw = apply_non_billable(raw)
     new_entry = journal.new_entry(raw, append=False)
     new_entry = apply_initial_task_properties(new_entry, journal=journal)
     journal.entries.append(new_entry)
