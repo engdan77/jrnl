@@ -176,7 +176,8 @@ def update_task_by_gui_columns(columns: Columns):
         logger.info(f"Added new task: {new_entry.title}")
     for entry in entries:
         if entry.title != new_title:
-            entry.title = t['title']
+            updated_title = apply_non_billable(t['title'])
+            entry.title = updated_title
         current_status = get_task_status(entry)
         if new_status != current_status:
             entry = set_task_status(entry, new_status)  # To avoid wrecking the current date
@@ -354,6 +355,10 @@ def clean_task_title_by_str(title: str) -> str:
             rf"@{status.value}(:\d+-\d+-\d+)?", "", t.strip()
         )
     return t.strip()
+
+
+def remove_all_tags(input_text: str) -> str:
+    return re.sub(r'\s@[^\s\b]+', '', input_text)
 
 
 def get_tasks_by_date(date_string: str, task_statuses: Iterable[TaskStatus] = (TaskStatus.completed,)) -> list[TaskEntryDict]:
@@ -590,7 +595,8 @@ def tasks_to_tsv(tasks: list[TaskEntryDict]) -> str:
 def make_tasks_text_simpler(summaries: list[TasksSummary]) -> list[TasksSummary]:
     for idx, summary in enumerate(summaries):
         logger.info(f"Making summary {idx + 1}/{len(summaries)} simpler")
-        summary.text_summary = make_task_bullets_simpler(summary.text_summary)
+        text = remove_all_tags(summary.text_summary)
+        summary.text_summary = make_task_bullets_simpler(text, duration=summary.total_time)
     return summaries
 
 

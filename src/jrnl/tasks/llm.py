@@ -1,3 +1,4 @@
+import datetime
 from typing import Final
 
 import ollama
@@ -13,7 +14,13 @@ SIMPLIFY_TASKS_PROMPT = Template("""Make a one line summary of the below tasks c
 $tasks_in_bullet_form
 """)
 
+SIMPLIFY_LONGER_TASKS_PROMPT = Template("""Make a one line summary of the below tasks completed, if there is more than one task, mention that these were a few of many tasks completed:
+$tasks_in_bullet_form
+""")
+
 MODEL: Final = 'gemma:7b'
+
+HOUR_IN_SECONDS: Final = 60 * 60
 
 console = rich.console.Console()
 
@@ -24,8 +31,14 @@ def pull_model():
 
 
 @cache(dir=CACHE_DIR)
-def make_task_bullets_simpler(tasks: str) -> str:
-    content = SIMPLIFY_TASKS_PROMPT.substitute(tasks_in_bullet_form=tasks)
+def make_task_bullets_simpler(tasks: str, duration: datetime.timedelta | None) -> str:
+
+    if duration is not None and duration.total_seconds() > HOUR_IN_SECONDS * 2:
+        template = SIMPLIFY_LONGER_TASKS_PROMPT
+    else:
+        template = SIMPLIFY_TASKS_PROMPT
+
+    content = template.substitute(tasks_in_bullet_form=tasks)
 
     try:
         response: ChatResponse = chat(model=MODEL, messages=[
