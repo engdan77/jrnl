@@ -22,7 +22,7 @@ dependencies = [
     "matplotlib>=3.10.6",
     "mdurl==0.1.2",
     "more-itertools==10.7.0",
-    "nicegui>=2.23.0",
+    "nicegui==2.23.0",
     "notebook>=7.4.5",
     "ollama>=0.5.3",
     "pandas>=2.3.2",
