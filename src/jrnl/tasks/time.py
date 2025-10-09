@@ -46,6 +46,10 @@ def normalize_date(from_date: str, to_date: str) -> tuple[str, str]:
         return last_monday, last_friday
     elif from_date.lower() == 'this month':
         return f'{datetime.date.today():%Y-%m-01}', parse(to_date).strftime("%Y-%m-%d")
+    elif from_date.lower() == 'last month':
+        last_day_last_month = datetime.date.today().replace(day=1) - datetime.timedelta(days=1)
+        first_day_last_month = last_day_last_month.replace(day=1)
+        return f'{first_day_last_month:%Y-%m-%d}', f'{last_day_last_month:%Y-%m-%d}'
     else:
         return parse(from_date).strftime("%Y-%m-%d"), parse(to_date).strftime("%Y-%m-%d")
 
