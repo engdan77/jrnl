@@ -1,6 +1,7 @@
 import csv
 import io
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -141,7 +142,8 @@ def sum_up_tasks(date: str,
                                           simplify_texts=simplify_texts,
                                           by_period=by_period)
     time.sleep(1)  # Just to ensure loggings comes before printing
-    print(summed_up_tasks)
+    print(summed_up_tasks, file=sys.stdout)
+    return summed_up_tasks
 
 
 @cli_app.command
