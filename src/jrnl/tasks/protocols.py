@@ -5,7 +5,7 @@ from typing import TypedDict, Protocol, Iterable
 
 import nicegui
 
-from jrnl.tasks.time import timedelta_to_string
+from jrnl.tasks.time import timedelta_to_string, string_to_timedelta
 
 
 class NiceGuiElement(Protocol):
@@ -68,11 +68,17 @@ class TasksSummary:
     text_summary: str
     starred: bool
 
-    def to_simpler_dict(self):
+    def to_simpler_dict(self, enforce_hours: bool = False) -> dict:
+        if isinstance(self.total_time, datetime.timedelta):
+            t = timedelta_to_string(self.total_time, enforce_hours=enforce_hours)
+        elif enforce_hours:
+                t = round(string_to_timedelta(self.total_time).total_seconds() / 3600, 1)
+        else:
+            t = timedelta_to_string(string_to_timedelta(self.total_time), enforce_hours=enforce_hours)
         return {
             'date': self.date,
             'tags': ', '.join(self.tags),
-            'total_time': timedelta_to_string(self.total_time) if isinstance(self.total_time, datetime.timedelta) else self.total_time,
+            'total_time':  t,
             'task_ids': ', '.join(str(_) for _ in self.task_ids),
             'text_summary': self.text_summary,
             'starred': self.starred

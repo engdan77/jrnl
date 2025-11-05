@@ -162,6 +162,8 @@ def stats(from_date: str = 'Monday', to_date: str = 'Today', by_period: Period =
         jrnl-cli stats monday friday --by-period=day
         jrnl-cli stats "last monday" "last friday" --by-period=day
         jrnl-cli stats "this month" today --include-only-tag unknown --include-only-tag foo
+        jrnl-cli stats "last month" "last month" --include-only-tag unknown --include-only-tag foo
+
     [/blue]
 
     Parameters:

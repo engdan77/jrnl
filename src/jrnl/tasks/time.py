@@ -11,11 +11,14 @@ def string_to_timedelta(s: str) -> datetime.timedelta:
     return datetime.timedelta(days=int(days), hours=int(hours), minutes=int(mins))
 
 
-def timedelta_to_string(td: datetime.timedelta) -> str:
+def timedelta_to_string(td: datetime.timedelta, enforce_hours: bool=False) -> str:
     output_string = ""
     days = td.days
     hours = td.seconds // 3600
     mins = (td.seconds // 60) % 60
+    if enforce_hours:
+        hours = round(hours + (mins // 60) + (days * 24), 1)
+        return f"{hours}h"
     if days:
         output_string += f"{days}d"
     if hours:

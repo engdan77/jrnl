@@ -159,6 +159,7 @@ def gui_create_task_rows(tasks: list, container: ui.column, styling: TaskRowsSty
 def gui_display_stats(from_date: str, to_date: str, by_period: Period = Period.day, include_tags: list[str] | None = None, dark_theme=False):
     if dark_theme:
         ui.dark_mode().enable()
+    # TODO: show details of X number of tasks summarized
     tasks_summaries: list [DaySummaryDict] = get_summed_up_tasks(from_date, to_date, simplify_texts=True, output_format=TaskOutputFormat.dict, by_period=by_period)
     if include_tags:
         tasks_summaries = [t for t in tasks_summaries if any(is_string_part_of_tags(tag, t['tags']) for tag in include_tags)]

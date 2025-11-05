@@ -18,7 +18,7 @@ import dateparser
 from jrnl.tasks.llm import make_task_bullets_simpler
 from jrnl.tasks.protocols import Columns, TaskStatus, TaskEntryDict, TasksSummary, TaskOutputFormat, DaySummaryDict, \
     Period
-from jrnl.tasks.time import string_to_timedelta, timedelta_to_string, timedelta_to_hours
+from jrnl.tasks.time import string_to_timedelta, timedelta_to_string, timedelta_to_hours, normalize_date
 
 if TYPE_CHECKING:
     pass
@@ -455,7 +455,8 @@ def get_day_summary_by_tasks(input_tasks: list[TaskEntryDict]) -> list[TasksSumm
 
 # Python
 def calc_total_duration(summaries: list[TasksSummary]) -> datetime.timedelta:
-    return functools.reduce(operator.add, [s.total_time for s in summaries], datetime.timedelta())
+    tot = functools.reduce(operator.add, [s.total_time for s in summaries], datetime.timedelta())
+    return tot
 
 
 def adjust_time(s: list[TasksSummary], steps_minutes: int = 15) -> list[TasksSummary]:
@@ -601,8 +602,9 @@ def make_tasks_text_simpler(summaries: list[TasksSummary]) -> list[TasksSummary]
 
 
 def get_date_range(from_date: str, to_date: str) -> Generator[str]:
-    from_date_dt = dateparser.parse(from_date)
-    to_date_dt = dateparser.parse(to_date)
+    normalized_from, normalized_to = normalize_date(from_date, to_date)
+    from_date_dt = dateparser.parse(normalized_from)
+    to_date_dt = dateparser.parse(normalized_to)
     for n in range(int((to_date_dt - from_date_dt).days) + 1):
         yield f'{from_date_dt + datetime.timedelta(days=n):%Y-%m-%d}'
 
@@ -641,7 +643,7 @@ def day_summary_per_tags(day_summaries: list [DaySummaryDict]) -> Counter:
     c = Counter()
     for s in day_summaries:
         tags = ','.join(sorted(s['tags'])).replace('@', '') or 'unknown'
-        c[tags] += string_to_timedelta(s['total_time']).seconds / 3600
+        c[tags] += round(string_to_timedelta(s['total_time']).total_seconds() / 3600, 1)
     return c
 
 
@@ -658,8 +660,10 @@ def truncate_tasks_by_tags_and_period(daily_tasks: list[TasksSummary], by_period
             dt_period = dt.strftime('%Y')
         assert by_period is not None, "Unsupported period"
         monthly_tasks[(dt_period, tags)].append(task)
+    tot_time = datetime.timedelta()
     for (dt_period, tags), tasks_ in monthly_tasks.items():
         monthly_duration = calc_total_duration(tasks_)
+        tot_time += monthly_duration
         all_texts = '\n'.join(t.text_summary for t in tasks_)
         starred = any(t.starred for t in tasks_)
         task_ids = list(itertools.chain.from_iterable([t.task_ids for t in tasks_]))
