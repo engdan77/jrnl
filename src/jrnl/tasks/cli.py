@@ -154,15 +154,15 @@ def journal_file():
 
 
 @cli_app.command
-def stats(from_date: str = 'Monday', to_date: str = 'Today', by_period: Period = Period.day, include_only_tag: list[str] | None = None):
+def stats(from_date: str = 'Monday', to_date: str = 'Today', by_period: Period = Period.day, filter_tag: list[str] | None = None, simplify_texts: bool = True):
     """
     Retrieve and display statistical data for a specific time period.\n
     [blue]Usage examples:
         jrnl-cli stats 2023-01-01 2023-01-31 --by-period=month
         jrnl-cli stats monday friday --by-period=day
         jrnl-cli stats "last monday" "last friday" --by-period=day
-        jrnl-cli stats "this month" today --include-only-tag unknown --include-only-tag foo
-        jrnl-cli stats "last month" "last month" --include-only-tag unknown --include-only-tag foo
+        jrnl-cli stats "this month" today --filter-tag foo
+        jrnl-cli stats "last month" "last month" --filter-tag unknown --filter-tag foo
 
     [/blue]
 
@@ -170,10 +170,11 @@ def stats(from_date: str = 'Monday', to_date: str = 'Today', by_period: Period =
         from_date: The starting date for the statistics in string format.
         to_date: The ending date for the statistics in string format
         by_period: The periodicity for the statistics (e.g., day, week, month)
-        include_only_tag: An optional list of specific tags to include in the statistics, use "unknown" to include those without tags
+        filter_tag: An optional list of specific tags to include in the statistics, use "unknown" to include those without tags
+        simplify_texts: Whether to simplify the task texts in the statistics
     """
     from_, to_ = normalize_date(from_date, to_date)
-    gui_display_stats(from_, to_, by_period=by_period, include_tags=include_only_tag)
+    gui_display_stats(from_, to_, by_period=by_period, include_tags=filter_tag, simplify_texts=simplify_texts)
 
 
 @cli_app.command

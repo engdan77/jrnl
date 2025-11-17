@@ -961,7 +961,7 @@ requires-dist = [
     { name = "matplotlib", specifier = ">=3.10.6" },
     { name = "mdurl", specifier = "==0.1.2" },
     { name = "more-itertools", specifier = "==10.7.0" },
-    { name = "nicegui", specifier = ">=2.23.0" },
+    { name = "nicegui", specifier = "==2.23.0" },
     { name = "notebook", specifier = ">=7.4.5" },
     { name = "ollama", specifier = ">=0.5.3" },
     { name = "pandas", specifier = ">=2.3.2" },

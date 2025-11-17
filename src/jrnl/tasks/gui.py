@@ -156,11 +156,11 @@ def gui_create_task_rows(tasks: list, container: ui.column, styling: TaskRowsSty
                 rows.append(row)
 
 
-def gui_display_stats(from_date: str, to_date: str, by_period: Period = Period.day, include_tags: list[str] | None = None, dark_theme=False):
+def gui_display_stats(from_date: str, to_date: str, by_period: Period = Period.day, include_tags: list[str] | None = None, dark_theme=False, simplify_texts=True):
     if dark_theme:
         ui.dark_mode().enable()
     # TODO: show details of X number of tasks summarized
-    tasks_summaries: list [DaySummaryDict] = get_summed_up_tasks(from_date, to_date, simplify_texts=True, output_format=TaskOutputFormat.dict, by_period=by_period)
+    tasks_summaries: list [DaySummaryDict] = get_summed_up_tasks(from_date, to_date, simplify_texts=simplify_texts, output_format=TaskOutputFormat.dict, by_period=by_period)
     if include_tags:
         tasks_summaries = [t for t in tasks_summaries if any(is_string_part_of_tags(tag, t['tags']) for tag in include_tags)]
     page_title(
@@ -168,6 +168,7 @@ def gui_display_stats(from_date: str, to_date: str, by_period: Period = Period.d
     )
     duration_per_tags = day_summary_per_tags(tasks_summaries)
     x_axis, series, labels = day_summary_to_bar_chart_data(tasks_summaries)
+    # TODO: Potentially sort the data and labels by hours
     with ui.matplotlib(figsize=(16, 6)).figure as fig:
         categories = x_axis
         plot_stacked_bar(
