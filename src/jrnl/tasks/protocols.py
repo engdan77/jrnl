@@ -43,6 +43,7 @@ class Columns:
     status: NiceGuiElement
     starred: NiceGuiElement
     duration: NiceGuiElement
+    deleted: NiceGuiElement
 
     def to_dict(self) -> ColumnsDict:
         return {

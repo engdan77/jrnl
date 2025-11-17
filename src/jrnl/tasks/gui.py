@@ -12,10 +12,11 @@ from jrnl import __version__
 from jrnl.tasks.chart import plot_pie, plot_stacked_bar
 from jrnl.tasks.sharedmem import set_shared, get_shared, create_shared, close_shared
 from jrnl.tasks.table import day_summaries_to_table
-from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_journal, get_next_sub_taskid, get_task_status, \
+from jrnl.tasks.task import get_tasks_by_id, get_task_id, get_next_sub_taskid, get_task_status, \
     get_duration, update_task_by_gui_columns, get_all_tasks, get_next_taskid, get_summed_up_tasks, \
     day_summary_to_bar_chart_data, day_summary_per_tags, get_tasks_by_status, get_tasks_grouped_by_tags, \
     is_string_part_of_tags
+from jrnl.tasks.journal import get_journal
 from jrnl.tasks.time import timedelta_to_string
 from jrnl.tasks.protocols import Columns, TaskStatus, TaskOutputFormat, DaySummaryDict, Period
 
@@ -50,7 +51,7 @@ def validate_duration(duration: str):
 
 @dataclasses.dataclass
 class TaskRowsStyle:
-    column_styling: str = '30px 80px 700px 100px 60px 90px'
+    column_styling: str = '30px 80px 700px 100px 60px 90px 60px'
     classes_styling: str = 'w-full'
     red_style: Tailwind = Tailwind().text_color('red-600').font_weight('bold')
     header_style: Tailwind = Tailwind().text_color('yellow-600').font_weight('bold')
@@ -103,8 +104,9 @@ def gui_update_task(taskid: float | str | None = None):
                 ui.label(f'{datetime.datetime.now():%Y-%m-%d}')
                 ui.input()
                 ui.select({s_.title(): s_.value for s_ in TaskStatus}, value='Todo')
-                ui.checkbox(value=False)
+                ui.checkbox(value=False)  # Starred
                 ui.input(value='', validation={'Shall be in 1d2h3m format': validate_duration})
+                ui.checkbox(value=False)  # Deleted
                 next_subtask_id = round(float(next_subtask_id) + 0.1, 2)
                 logger.info(f'Generating next subtask id: {next_subtask_id}')
                 set_shared(next_subtask_id)
@@ -135,7 +137,7 @@ def gui_get_task_rows_container(header_markdown: str = "#### Tasks ✅", display
 
 
 def gui_create_task_rows(tasks: list, container: ui.column, styling: TaskRowsStyle, highlight_taskid: float | str | None = None):
-    header_titles = ('ID', 'Date', 'Title', 'Status', 'Starred', 'Duration')
+    header_titles = ('ID', 'Date', 'Title', 'Status', 'Starred', 'Duration', 'Deleted')
     with container:
         with ui.grid(columns=styling.column_styling).classes(styling.classes_styling) as row:
             for h in header_titles:
@@ -153,6 +155,7 @@ def gui_create_task_rows(tasks: list, container: ui.column, styling: TaskRowsSty
                 ui.select({s.title(): s.value for s in TaskStatus}, value=get_task_status(task).title())
                 ui.checkbox(value=task['starred'])
                 ui.input(value=current_duration_string, validation={'Shall be in 1d2h3m format': validate_duration})
+                ui.checkbox(value=False)
                 rows.append(row)
 
 

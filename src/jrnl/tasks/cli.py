@@ -17,8 +17,9 @@ from jrnl.tasks.gui import gui_update_task, gui_display_stats, gui_display_todos
 from jrnl.tasks.llm import make_task_bullets_simpler
 from jrnl.tasks.output import search_result_to_alfred
 from jrnl.tasks.task import add_task_to_journal, search_journal, add_duration_to_task, get_all_tasks_as_dict, \
-    set_status_to_task, get_journal_file_path, get_summed_up_tasks, tasks_to_tsv, get_task_date, get_tasks_by_date, \
+    set_status_to_task, get_summed_up_tasks, tasks_to_tsv, get_task_date, get_tasks_by_date, \
     get_summarized_time
+from jrnl.tasks.journal import get_journal_file_path
 from jrnl.tasks.protocols import TaskStatus, TaskOutputFormat, EntryOutputFormat, Period
 from jrnl.tasks.time import normalize_date
 

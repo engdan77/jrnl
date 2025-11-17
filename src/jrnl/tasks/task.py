@@ -6,7 +6,6 @@ import itertools
 import json
 import operator
 import re
-from unittest import case
 
 from loguru import logger
 from collections import defaultdict, Counter
@@ -15,6 +14,7 @@ from tabulate import tabulate
 
 import dateparser
 
+from jrnl.tasks.journal import get_journal
 from jrnl.tasks.llm import make_task_bullets_simpler
 from jrnl.tasks.protocols import Columns, TaskStatus, TaskEntryDict, TasksSummary, TaskOutputFormat, DaySummaryDict, \
     Period
@@ -168,23 +168,27 @@ def update_task_by_gui_columns(columns: Columns):
     journal, journal_file = get_journal()
     assert isinstance(task_id, float), 'Task ID must be a float to be specific'
     entries = get_entries_by_keyword(journal, f"{TASK_ID_PHRASE}{task_id}")
-    if not entries:
-        new_entry = journal.new_entry(new_title, append=False)
-        new_entry = apply_initial_task_properties(new_entry, journal=journal, override_task_id=task_id)
-        set_task_status(new_entry, new_status)
-        journal.entries.append(new_entry)
-        logger.info(f"Added new task: {new_entry.title}")
-    for entry in entries:
-        if entry.title != new_title:
-            updated_title = apply_non_billable(t['title'])
-            entry.title = updated_title
-        current_status = get_task_status(entry)
-        if new_status != current_status:
-            entry = set_task_status(entry, new_status)  # To avoid wrecking the current date
-        if duration:
-            entry = replace_duration(entry, duration)
-        logger.info(f"Updated task: {entry.title}")
-    journal.write(journal_file)
+    delete = columns.deleted.value
+    if delete:
+        logger.info(f"Deleting task: {new_title}")
+    else:
+        if not entries:
+            new_entry = journal.new_entry(new_title, append=False)
+            new_entry = apply_initial_task_properties(new_entry, journal=journal, override_task_id=task_id)
+            set_task_status(new_entry, new_status)
+            journal.entries.append(new_entry)
+            logger.info(f"Added new task: {new_entry.title}")
+        for entry in entries:
+            if entry.title != new_title:
+                updated_title = apply_non_billable(t['title'])
+                entry.title = updated_title
+            current_status = get_task_status(entry)
+            if new_status != current_status:
+                entry = set_task_status(entry, new_status)  # To avoid wrecking the current date
+            if duration:
+                entry = replace_duration(entry, duration)
+            logger.info(f"Updated task: {entry.title}")
+        journal.write(journal_file)
 
 
 def get_duration(entry: Union["Entry", dict]) -> datetime.timedelta:
@@ -245,19 +249,6 @@ def apply_initial_task_properties(entry: "Entry", journal: "Journal", override_t
     return entry
 
 
-def get_journal(journal_name: str = "default") -> tuple["Journal", str]:
-    # Delay these imports to avoid circular-import during module import.
-    from jrnl import install
-    from jrnl.config import scope_config
-    from jrnl.journals import Journal
-    config = install.load_or_install_jrnl("")
-    config = scope_config(config, journal_name)
-    journal_file = config["journal"]
-    journal = Journal()
-    journal.open(journal_file)
-    return journal, journal_file
-
-
 def add_task_to_journal(raw: str, journal_name: str = "default"):
     """Main function to add a task to the journal."""
     journal, journal_file = get_journal()
@@ -288,11 +279,6 @@ def set_status_to_task(task_id: float, status: TaskStatus):
         entry = set_task_status(entry, status)
         journal.entries.append(entry)
     journal.write(journal_file)
-
-
-def get_journal_file_path(journal_name: str = "default") -> str:
-    journal, journal_file = get_journal(journal_name)
-    return journal_file
 
 
 def search_journal(keywords: list[str]) -> dict | list[dict]:
@@ -778,3 +764,5 @@ def example_tasks():
 
 if __name__ == "__main__":
     example_tasks()
+
+

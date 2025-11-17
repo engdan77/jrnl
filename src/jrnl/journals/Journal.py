@@ -17,7 +17,6 @@ from jrnl.path import expand_path
 from jrnl.prompt import yesno
 
 from .Entry import Entry
-from ..tasks.task import apply_initial_task_properties
 
 
 class Tag:
