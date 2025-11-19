@@ -137,7 +137,7 @@ def gui_get_task_rows_container(header_markdown: str = "#### Tasks ✅", display
 
 
 def gui_create_task_rows(tasks: list, container: ui.column, styling: TaskRowsStyle, highlight_taskid: float | str | None = None):
-    header_titles = ('ID', 'Date', 'Title', 'Status', 'Starred', 'Duration', 'Deleted')
+    header_titles = ('ID', 'Date', 'Title', 'Status', 'Starred', 'Duration', 'Delete')
     with container:
         with ui.grid(columns=styling.column_styling).classes(styling.classes_styling) as row:
             for h in header_titles:

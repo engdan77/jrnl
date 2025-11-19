@@ -161,24 +161,26 @@ def update_task_by_gui_columns(columns: Columns):
     """Update a task by the GUI columns."""
     t = columns.to_dict()
     new_title = t['title']
-    task_id = float(t['id'])
+    task_id_to_be_updated = float(t['id'])
     new_status = TaskStatus(t['status'].lower())
     duration = string_to_timedelta(t['duration'])
 
     journal, journal_file = get_journal()
-    assert isinstance(task_id, float), 'Task ID must be a float to be specific'
-    entries = get_entries_by_keyword(journal, f"{TASK_ID_PHRASE}{task_id}")
+    assert isinstance(task_id_to_be_updated, float), 'Task ID must be a float to be specific'
+    found_entries = get_entries_by_keyword(journal, f"{TASK_ID_PHRASE}{task_id_to_be_updated}")
     delete = columns.deleted.value
     if delete:
-        logger.info(f"Deleting task: {new_title}")
+        for e in found_entries:
+            journal.entries.remove(e)
+            logger.info(f"Deleting task: {new_title}")
     else:
-        if not entries:
+        if not found_entries:
             new_entry = journal.new_entry(new_title, append=False)
-            new_entry = apply_initial_task_properties(new_entry, journal=journal, override_task_id=task_id)
+            new_entry = apply_initial_task_properties(new_entry, journal=journal, override_task_id=task_id_to_be_updated)
             set_task_status(new_entry, new_status)
             journal.entries.append(new_entry)
             logger.info(f"Added new task: {new_entry.title}")
-        for entry in entries:
+        for entry in found_entries:
             if entry.title != new_title:
                 updated_title = apply_non_billable(t['title'])
                 entry.title = updated_title
@@ -188,7 +190,7 @@ def update_task_by_gui_columns(columns: Columns):
             if duration:
                 entry = replace_duration(entry, duration)
             logger.info(f"Updated task: {entry.title}")
-        journal.write(journal_file)
+    journal.write(journal_file)
 
 
 def get_duration(entry: Union["Entry", dict]) -> datetime.timedelta:
