@@ -1,6 +1,7 @@
 import csv
 import io
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -53,6 +54,7 @@ def list_tasks(date: str | None = None, output_format: EntryOutputFormat = Entry
 @cli_app.command
 def add_task(text: str):
     """ Add a task to the journal."""
+    text = re.sub(r'^add ([A-Z])', r'\1', text)  # Minor fix it line starts with "add"
     logger.info(f"Adding task: {text}")
     add_task_to_journal(text)
 
