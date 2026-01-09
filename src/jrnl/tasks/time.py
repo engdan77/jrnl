@@ -53,6 +53,29 @@ def normalize_date(from_date: str, to_date: str) -> tuple[str, str]:
         last_day_last_month = datetime.date.today().replace(day=1) - datetime.timedelta(days=1)
         first_day_last_month = last_day_last_month.replace(day=1)
         return f'{first_day_last_month:%Y-%m-%d}', f'{last_day_last_month:%Y-%m-%d}'
+    elif from_date.lower() == 'last quarter':
+        today = datetime.date.today()
+        # Current quarter (1 for Jan-Mar, 2 for Apr-Jun, etc.)
+        current_quarter = (today.month - 1) // 3 + 1
+        
+        # Calculate the year and the first month of the last quarter
+        if current_quarter == 1:
+            last_quarter_year = today.year - 1
+            first_month_of_last_quarter = 10  # October
+        else:
+            last_quarter_year = today.year
+            first_month_of_last_quarter = (current_quarter - 2) * 3 + 1
+            
+        first_day_last_quarter = datetime.date(last_quarter_year, first_month_of_last_quarter, 1)
+        # The last day of a quarter is the day before the first day of the next quarter
+        # Adding 3 months to the first day of the quarter gives the first day of the next quarter
+        next_quarter_month = first_month_of_last_quarter + 3
+        if next_quarter_month > 12:
+            last_day_last_quarter = datetime.date(last_quarter_year, 12, 31)
+        else:
+            last_day_last_quarter = datetime.date(last_quarter_year, next_quarter_month, 1) - datetime.timedelta(days=1)
+            
+        return f'{first_day_last_quarter:%Y-%m-%d}', f'{last_day_last_quarter:%Y-%m-%d}'
     else:
         return parse(from_date).strftime("%Y-%m-%d"), parse(to_date).strftime("%Y-%m-%d")
 
