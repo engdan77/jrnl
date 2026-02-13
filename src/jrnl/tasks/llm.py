@@ -31,7 +31,7 @@ def pull_model():
 
 
 @cache(dir=CACHE_DIR)
-def make_task_bullets_simpler(tasks: str, duration: datetime.timedelta | None) -> str:
+def make_task_bullets_simpler(tasks: str, duration: datetime.timedelta | None, model: str = MODEL) -> str:
 
     if duration is not None and duration.total_seconds() > HOUR_IN_SECONDS * 2:
         template = SIMPLIFY_LONGER_TASKS_PROMPT
@@ -41,7 +41,7 @@ def make_task_bullets_simpler(tasks: str, duration: datetime.timedelta | None) -
     content = template.substitute(tasks_in_bullet_form=tasks)
 
     try:
-        response: ChatResponse = chat(model=MODEL, messages=[
+        response: ChatResponse = chat(model=model, messages=[
             {
                 'role': 'user',
                 'content': content,

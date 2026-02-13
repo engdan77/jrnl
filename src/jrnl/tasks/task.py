@@ -15,7 +15,7 @@ from tabulate import tabulate
 import dateparser
 
 from jrnl.tasks.journal import get_journal
-from jrnl.tasks.llm import make_task_bullets_simpler
+from jrnl.tasks.llm import make_task_bullets_simpler, MODEL
 from jrnl.tasks.protocols import Columns, TaskStatus, TaskEntryDict, TasksSummary, TaskOutputFormat, DaySummaryDict, \
     Period
 from jrnl.tasks.time import string_to_timedelta, timedelta_to_string, timedelta_to_hours, normalize_date
@@ -582,11 +582,11 @@ def tasks_to_tsv(tasks: list[TaskEntryDict]) -> str:
     return output_csv.getvalue()
 
 
-def make_tasks_text_simpler(summaries: list[TasksSummary]) -> list[TasksSummary]:
+def make_tasks_text_simpler(summaries: list[TasksSummary], model: str = MODEL) -> list[TasksSummary]:
     for idx, summary in enumerate(summaries):
         logger.info(f"Making summary {idx + 1}/{len(summaries)} simpler")
         text = remove_all_tags(summary.text_summary)
-        summary.text_summary = make_task_bullets_simpler(text, duration=summary.total_time)
+        summary.text_summary = make_task_bullets_simpler(text, duration=summary.total_time, model=model)
     return summaries
 
 
@@ -686,13 +686,17 @@ def get_summed_up_tasks(date_string: str,
                         to_date_string: str | None = None,
                         output_format: TaskOutputFormat = TaskOutputFormat.json,
                         simplify_texts: bool = False,
-                        by_period: Period = Period.day) -> Any:
+                        by_period: Period = Period.day,
+                        model: str = MODEL,
+                        ) -> Any:
     """
     Processes and summarizes tasks grouped by date. Provides output in various formats
     such as JSON, dictionary, TSV, or a formatted table. The function supports processing
     a range of dates and has an option to simplify the texts in the summaries.
 
-    Parameters:
+    Parameters
+    ----------
+        model: LLM model
         date_string (str): The starting date string in the range of tasks to process.
         to_date_string (str | None, optional): The ending date string in the range; if None,
             only the `date_string` is processed. Default is None.
@@ -700,12 +704,6 @@ def get_summed_up_tasks(date_string: str,
             dictionary, TSV, or a formatted table.
         simplify_texts (bool): Whether to simplify the text in the summaries. Default is False.
         by_period (Period): The granularity of how tasks are summarized, such as daily. Default is Period.day.
-
-    Returns:
-        Any: The summarized task information in the specified output format.
-
-    Raises:
-        No exceptions are specified for this function.
     """
     if to_date_string:
         dates = list(get_date_range(date_string, to_date_string))
@@ -728,7 +726,7 @@ def get_summed_up_tasks(date_string: str,
         all_summaries = truncate_tasks_by_tags_and_period(all_summaries, by_period=by_period)
 
     if simplify_texts:
-        all_summaries = make_tasks_text_simpler(all_summaries)
+        all_summaries = make_tasks_text_simpler(all_summaries, model=model)
     match output_format:
         case TaskOutputFormat.dict:
             return day_summary_to_dict(all_summaries)
