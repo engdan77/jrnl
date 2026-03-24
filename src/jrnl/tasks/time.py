@@ -74,8 +74,21 @@ def normalize_date(from_date: str, to_date: str) -> tuple[str, str]:
             last_day_last_quarter = datetime.date(last_quarter_year, 12, 31)
         else:
             last_day_last_quarter = datetime.date(last_quarter_year, next_quarter_month, 1) - datetime.timedelta(days=1)
-            
+
         return f'{first_day_last_quarter:%Y-%m-%d}', f'{last_day_last_quarter:%Y-%m-%d}'
+    elif from_date.lower() == 'this quarter':
+        today = datetime.date.today()
+        current_quarter = (today.month - 1) // 3 + 1
+        first_month_of_quarter = (current_quarter - 1) * 3 + 1
+        first_day_of_quarter = datetime.date(today.year, first_month_of_quarter, 1)
+
+        next_quarter_month = first_month_of_quarter + 3
+        if next_quarter_month > 12:
+            last_day_of_quarter = datetime.date(today.year, 12, 31)
+        else:
+            last_day_of_quarter = datetime.date(today.year, next_quarter_month, 1) - datetime.timedelta(days=1)
+
+        return f'{first_day_of_quarter:%Y-%m-%d}', f'{last_day_of_quarter:%Y-%m-%d}'
     else:
         return parse(from_date).strftime("%Y-%m-%d"), parse(to_date).strftime("%Y-%m-%d")
 
