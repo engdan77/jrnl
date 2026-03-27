@@ -145,7 +145,7 @@ def sum_up_tasks(date: str,
                                           by_period=by_period,
                                           model=model)
     time.sleep(1)  # Just to ensure loggings comes before printing
-    print(summed_up_tasks, file=sys.stdout)
+    print(summed_up_tasks, file=sys.stderr)
     return summed_up_tasks
 
 
